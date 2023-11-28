@@ -28,6 +28,38 @@ export default async function handler(req, res) {
     // Determine the body to send based on the request method
     let body = null;
     if (req.method === "POST" || req.method === "PATCH") {
+      // check if all required fields are present
+      // read them from the dynamicCofiguration from the EndpointBodies with given endpoint name
+      const endpointBody = config.DynamicConfiguration.EndpointBodies.find(
+        (e) => e.Name === req.query.endpoint
+      );
+      // check if all fields in the config are present in the request body, also check that no additional fields are present
+      const requiredFields = endpointBody.Fields;
+      // check if all required fields are present in the request body
+      const missingFields = requiredFields.filter(
+        (field) => !(field.Name in req.body)
+      );
+      if (missingFields.length > 0) {
+        // if there are missing fields, return error
+        const missingFieldNames = missingFields.map((field) => field.Name);
+        res.status(400).json({
+          error: "Missing required fields: " + missingFieldNames.join(", "),
+        });
+        return;
+      }
+      // check if there are any additional fields in the request body
+      const additionalFields = Object.keys(req.body).filter(
+        (field) =>
+          !requiredFields.some((requiredField) => requiredField.Name === field)
+      );
+      if (additionalFields.length > 0) {
+        // if there are additional fields, return error
+        res.status(400).json({
+          error: "Additional fields: " + additionalFields.join(", "),
+        });
+        return;
+      }
+
       body = JSON.stringify(req.body);
     }
 
