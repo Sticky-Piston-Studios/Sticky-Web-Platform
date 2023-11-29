@@ -1,0 +1,99 @@
+{
+  "Configuration": {
+    "DatabaseConnectionString": "mongodb://root:root@cem-database:27017",
+    "Databases": [
+      {
+        "Name": "Main",
+        "Collections": [
+          {
+            "Name": "Companies",
+            "Model": "Company"
+          }
+        ]
+      }
+    ],
+    "EndpointGroups": [
+      {
+        "Name": "Companies",
+        "Path": "/api/companies",
+        "Endpoints": [
+          {
+            "Name": "GetCompany",
+            "Method": "GET",
+            "BodyName": "GetCompany",
+            "Action": {
+              "Type": "Default",
+              "DatabaseName": "Main",
+              "DatabaseCollectionName": "Companies"
+            }
+          },
+          {
+            "Name": "AddCompany",
+            "Method": "POST",
+            "BodyName": "AddCompany",
+            "Action": {
+              "Type": "Default",
+              "DatabaseName": "Main",
+              "DatabaseCollectionName": "Companies"
+            }
+          }
+        ]
+      }
+    ],
+    "DatabaseModels": [
+      {
+        "Name": "Company",
+        "Fields": [
+          { 
+            "Name": "Id",
+            "Type": "Id"
+          },
+          {
+            "Name": "Name",
+            "Type": "String"
+          },
+          { 
+            "Name": "RestaurantIds",
+            "Type": "List<Id>"
+          },
+          {
+            "Name": "Value",
+            "Type": "Int"
+          }
+        ]
+      }
+    ],
+    "EndpointBodies": [
+      {
+        "Name": "GetCompany",
+        "Fields": [
+          {
+            "Name": "Name",
+            "Type": "String"
+          },
+          {
+            "Name": "RestaurantIds",
+            "Type": "List<Id>"
+          },
+          {
+            "Name": "Value",
+            "Type": "Int"
+          }
+        ]
+      },
+      {
+        "Name": "AddCompany",
+        "Fields": [
+          {
+            "Name": "Name",
+            "Type": "String"
+          },
+          {
+            "Name": "Value",
+            "Type": "Int"
+          }
+        ]
+      }
+    ]
+  }
+}
