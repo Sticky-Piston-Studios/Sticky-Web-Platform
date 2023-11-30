@@ -24,23 +24,49 @@ const argv = yargs
   .help()
   .argv;
 
+	
+
 // Check for action flag
 const configPath = path.resolve(argv.config);
 const config = readConfig(configPath);
 const action = argv.action;
 
-function startDev() {
-	console.log("Starting all services in development mode...");
-	process.env['ASPNETCORE_ENVIRONMENT'] = 'Development';
-
-	// TODO: Add environment variables for frontend too
-
-	runDockerCompose();
+function readConfig(configPath) {
+	try {
+		const configData = fs.readFileSync(configPath);
+		return JSON.parse(configData);
+	} catch (error) {
+		console.error(`Error reading config file: ${error.message}`);
+		process.exit(1);
+	}
 }
 
-function start() {
-	console.log("Starting all services in release mode...");
-	process.env['ASPNETCORE_ENVIRONMENT'] = 'Production';
+switch (action) {
+  case 'InitializeDatabase':
+    initializeDatabase();
+    break;
+	case 'ClearDatabase':
+		clearDatabase();
+		break;
+	case 'Start':
+		start(false);
+		break;
+	case 'StartDev':
+		start(true);
+		break;
+  default:
+    console.error('Unknown action. Check help using -h flag');
+    break;
+}
+
+
+// ------------------ Actions ------------------
+
+function start(development) {
+	const mode = development ? 'Development' : 'Production';
+
+	console.log(`Starting all services in ${mode} mode...`);
+	process.env['BACKEND_MODE'] = `${mode}`;
 
 	// TODO: Add environment variables for frontend too
 
@@ -49,19 +75,21 @@ function start() {
 
 function runDockerCompose() {
 	// Command to run Docker Compose
-	const dockerComposeCommand = 'docker-compose -f docker-compose.yaml up -d database backend frontend nginx';
+	const services = "database backend "; // frontend nginx
+	const dockerComposeCommand = `docker-compose -f docker-compose.yaml up ${services} -d --build`;
 
 	// Execute the command
-	exec(dockerComposeCommand, (error, stdout, stderr) => {
+	exec(dockerComposeCommand, { env: { ...process.env } }, (error, stdout, stderr) => {
 		if (error) {
 			console.error(`Error executing Docker Compose command: ${error}`);
 			return;
 		}
 
-		console.log(`Docker Compose command output: ${stdout}`);
 		if (stderr) {
 			console.error(`Docker Compose command error output: ${stderr}`);
 		}
+
+		console.log(`Docker Compose command output: ${stdout}`);
 	});
 }
 
@@ -161,78 +189,6 @@ async function clearDatabase() {
   catch (error)
   {
     console.error("Error when clearing database:", error);
-  }
-  finally
-  {
-    await client.close();
-  }
-}
-
-switch (action) {
-  case 'InitializeDatabase':
-    initializeDatabase();
-    break;
-	case 'ClearDatabase':
-		clearDatabase();
-		break;
-	case 'Start':
-		start();
-		break;
-	case 'StartDev':
-		startDev();
-		break;
-  default:
-    console.error('Unknown action. Check help using -h flag');
-    break;
-}
-
-
-
-
-function readConfig(configPath) {
-    try {
-      const configData = fs.readFileSync(configPath);
-      return JSON.parse(configData);
-    } catch (error) {
-      console.error(`Error reading config file: ${error.message}`);
-      process.exit(1);
-    }
-  }
-
-async function initDatabase(connectionString) {
-  const client = new MongoClient(connectionString, { useNewUrlParser: true, useUnifiedTopology: true });
-
-  try
-  {
-    console.log("Beginning Database initialisation...");
-    await client.connect();
-
-    const adminDb = client.db('admin');
-
-    // Create main database
-    const mainDb = client.db('main');
-
-    // Create and initialize users collection
-    const usersCollection = await mainDb.createCollection("users");
-    await usersCollection.insertMany(users);
-
-    // Create and initialize refresTokens collection
-    const refreshTokensCollection = await mainDb.createCollection("refreshTokens");
-    await refreshTokensCollection.createIndex({ "tokenString": 1 }, { unique: true });
-
-    // Create and initialize events collection
-    const eventsCollection = await mainDb.createCollection("events");
-    await eventsCollection.insertMany(events);
-
-    // Create and initialize images collection
-    const imagesCollection = await mainDb.createCollection("images");
-    await imagesCollection.insertMany(await images(imageDirectoryPath));
-
-    console.log("Database initialized successfully!");
-  }
-  catch (error)
-  {
-    console.error("Error initializing the database:", error);
   }
   finally
   {

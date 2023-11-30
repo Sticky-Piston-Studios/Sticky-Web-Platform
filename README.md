@@ -21,7 +21,7 @@ Deletes all databases except `local`, `admin` and `config`.
 
 To run all containers: 
 - `cd <PROJECT_FOLDER>` 
-- `docker compose -f "docker-compose.yaml" up -d database backend frontend nginx`
+- `docker compose -f "docker-compose.yaml" up database backend frontend nginx -d --build`
 
 To run frontend locally (for hot reloading support):
 - `cd <PROJECT_FOLDER>/frontend` 

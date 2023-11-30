@@ -82,6 +82,7 @@ namespace StickyWebBackend
 
 
             var app = builder.Build();
+            Console.WriteLine($"Running in mode: " + (app.Environment.IsDevelopment() ? "Development" : "Production"));
 
             InitializeDynamicConfiguration(app, configuration);
 
@@ -90,6 +91,8 @@ namespace StickyWebBackend
             if (app.Environment.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+
+                Console.WriteLine("Enabling Swagger");
                 
                 app.UseSwagger(option =>
                 {   
@@ -134,6 +137,8 @@ namespace StickyWebBackend
 
         public void InitializeDynamicConfiguration(WebApplication app, IConfiguration configuration) 
         {
+            Console.WriteLine("Initializing dynamic configuration");
+
             // Read project configuration to get path to dynamic configuration file
             string dynamicConfigurationFilePath;
             if (!Utils.GetValue(configuration.GetValue<string>("DynamicConfigurationPath"), out dynamicConfigurationFilePath))

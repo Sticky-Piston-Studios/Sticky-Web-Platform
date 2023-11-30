@@ -43,12 +43,17 @@ services:
     container_name: swf-backend
     hostname: swf-backend
     environment:
+      - ASPNETCORE_URLS=http://+:4000
       - ASPNETCORE_ENVIRONMENT=${BACKEND_MODE}
     build:
       context: ./backend
       dockerfile: Dockerfile
     ports:
       - 4000:4000
+    volumes:
+      # Backend is running in /app directory inside the container,
+      # so it will look for the configuration.json file in its parent (according to the appsettings.json file)
+      - ./configuration.json:/configuration.json:ro
     depends_on:
       - database
     networks:
