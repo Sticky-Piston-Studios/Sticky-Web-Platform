@@ -1,8 +1,10 @@
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using MongoDB.Bson;
 using MongoDB.Driver;
+
 
 namespace StickyWebBackend
 {
@@ -50,7 +52,7 @@ namespace StickyWebBackend
         {
             if (!File.Exists(dynamicConfigurationFilePath)) 
             {
-                throw new Exception($"Dynamic configuration file doesn't exist: {dynamicConfigurationFilePath}");
+                Utils.ErrorExit($"Dynamic configuration file doesn't exist: {dynamicConfigurationFilePath}");
             }
 
             // Read dynamic configuration
@@ -63,18 +65,28 @@ namespace StickyWebBackend
                 PropertyNameCaseInsensitive = true,
             };
 
-            DynamicConfiguration? dynamicConfiguration = JsonSerializer.Deserialize<DynamicConfiguration>(json, options);
-            
-            if (dynamicConfiguration == null) 
+            DynamicConfiguration? dynamicConfiguration = null;
+            try 
             {
-                throw new Exception($"Dynamic configuration file is empty: {dynamicConfigurationFilePath}");
+                dynamicConfiguration = JsonSerializer.Deserialize<DynamicConfiguration>(json, options);
+            }
+            catch (Exception ex)
+            {
+                Utils.ErrorExit("Json file with dynamic configuration is invalid!", ex);
             }
 
-            DatabaseConnectionString = dynamicConfiguration.DatabaseConnectionString;
-            Databases = dynamicConfiguration.Databases;
-            EndpointGroups = dynamicConfiguration.EndpointGroups; 
-            DatabaseModels = dynamicConfiguration.DatabaseModels;
-            EndpointBodies = dynamicConfiguration.EndpointBodies;
+            if (dynamicConfiguration != null) 
+            {
+                DatabaseConnectionString = dynamicConfiguration.DatabaseConnectionString;
+                Databases = dynamicConfiguration.Databases;
+                EndpointGroups = dynamicConfiguration.EndpointGroups; 
+                DatabaseModels = dynamicConfiguration.DatabaseModels;
+                EndpointBodies = dynamicConfiguration.EndpointBodies;
+            }
+            else
+            {
+                Utils.ErrorExit($"Dynamic configuration file is empty: {dynamicConfigurationFilePath}");
+            }
         }
     }
 
@@ -138,13 +150,25 @@ namespace StickyWebBackend
                 EndpointActionType endpointActionType;
                 Enum.TryParse(root.GetProperty("Type").ToString(), out endpointActionType);
 
-                switch (endpointActionType){
-                    case EndpointActionType.Custom:
-                        return JsonSerializer.Deserialize<EndpointCustomActionDefinition>(root.GetRawText());
+
+                switch (endpointActionType){    
                     case EndpointActionType.Default:
-                        return JsonSerializer.Deserialize<EndpointDefaultActionDefinition>(root.GetRawText());
+                        EndpointDefaultActionDefinition DefaultAction;
+                        if (!Utils.GetValue(JsonSerializer.Deserialize<EndpointDefaultActionDefinition>(root.GetRawText()), out DefaultAction))
+                        {
+                            Utils.ErrorExit($"Incorrect configuration of Default action!");
+                        }
+                        return DefaultAction;
+                    case EndpointActionType.Custom:
+                        EndpointCustomActionDefinition CustomAction;
+                        if (!Utils.GetValue(JsonSerializer.Deserialize<EndpointCustomActionDefinition>(root.GetRawText()), out CustomAction))
+                        {
+                            Utils.ErrorExit($"Incorrect configuration of Custom action!");
+                        }
+                        return CustomAction;
                     default:
-                        throw new Exception($"Unknown action type in config: {endpointActionType}");
+                        Utils.ErrorExit($"Unknown action type {endpointActionType} in configuration! Use Default or Custom");
+                        throw new UnreachableException();
                 }
             }
         }

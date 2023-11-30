@@ -19,7 +19,15 @@ public class Tests
     [Test]
     public void GettingDynamicConfigurationPath()
     {   
-        string settingFilePath = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), @"appsettings.json");
+        string? DirectoryPath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+        
+        if (DirectoryPath == null)
+        {
+            Assert.Fail();
+            return;
+        }
+
+        string settingFilePath = Path.Combine(DirectoryPath, @"appsettings.json");
         var configuration = new ConfigurationBuilder().AddJsonFile(settingFilePath).Build();
         Assert.That(configuration["DynamicConfigurationPath"], Is.Not.Null);
     }
@@ -50,9 +58,9 @@ public class Tests
 
         Assert.That(dynamicConfiguration.EndpointGroups?[0].Endpoints[0].Name, Is.EqualTo("GetCompany"));
         Assert.That(dynamicConfiguration.EndpointGroups?[0].Endpoints[0].Action.Type, Is.EqualTo(EndpointActionType.Default));
-        Assert.That((dynamicConfiguration.EndpointGroups?[0].Endpoints[0].Action as EndpointDefaultActionDefinition).DatabaseCollectionName, Is.EqualTo("Companies"));
+        Assert.That((dynamicConfiguration.EndpointGroups?[0].Endpoints[0].Action as EndpointDefaultActionDefinition)?.DatabaseCollectionName, Is.EqualTo("Companies"));
         Assert.That(dynamicConfiguration.EndpointGroups?[0].Endpoints[1].Action.Type, Is.EqualTo(EndpointActionType.Custom));
-        Assert.That((dynamicConfiguration.EndpointGroups?[0].Endpoints[1].Action as EndpointCustomActionDefinition).Name, Is.EqualTo("AddCompanyCustom"));
+        Assert.That((dynamicConfiguration.EndpointGroups?[0].Endpoints[1].Action as EndpointCustomActionDefinition)?.Name, Is.EqualTo("AddCompanyCustom"));
 
         // DatabaseModels
         Assert.That(dynamicConfiguration.DatabaseModels?[0].Name, Is.EqualTo("Company"));

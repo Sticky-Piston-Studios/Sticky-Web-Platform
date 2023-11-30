@@ -6,6 +6,8 @@ using MongoDB.Driver;
 using System.Text.Json;
 using System.Linq;
 using System.Text.Json.Serialization;
+using System.Diagnostics;
+using Microsoft.IdentityModel.Tokens;
 
 
 namespace StickyWebBackend
@@ -63,6 +65,52 @@ namespace StickyWebBackend
             return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo);
         }
 
+        public static void ErrorExit(string message, Exception? exception = null)
+        {
+            string finalMessage = $"ERROR: {message}";
+
+            if (exception != null)
+            {
+                int index = exception.Message.IndexOf("Unhandled exception.");
+                string exceptionMessage = index != -1 ? exception.Message.Substring(0, index).Trim() : exception.Message;
+                finalMessage += $"\n{exceptionMessage}";
+            }
+          
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(finalMessage);
+            Console.ResetColor();
+
+            Environment.Exit(1);
+            throw new UnreachableException();
+        }
+
+        public static bool GetValue<T>(T? nullableValue, out T Value, string message = "", Exception? exception = null)  
+        {
+            #pragma warning disable CS8601
+            Value = nullableValue;
+            #pragma warning restore CS8601
+
+            return !(nullableValue == null || (nullableValue is string && (nullableValue as string).IsNullOrEmpty()));
+        }
+    }
+
+    public class StickyException: Exception
+    {
+        bool printStackTrace;
+
+        public StickyException(string message, bool printStackTrace = false) : base(message) 
+        { 
+            this.printStackTrace = printStackTrace;
+        }
+
+        // Return stack trace if set and exist
+        public override string StackTrace 
+        {
+            get 
+            { 
+                return printStackTrace ? (base.StackTrace != null ? base.StackTrace : string.Empty) : string.Empty; 
+            }
+        }
     }
 
     public static class BsonDocumentExtensions
@@ -83,7 +131,7 @@ namespace StickyWebBackend
  
     public class PageDTO<T> {
         
-        public List<T> Items { get; set; }
+        public required List<T> Items { get; set; }
 
         public int CurrentPage { get; set; }
 

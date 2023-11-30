@@ -22,7 +22,7 @@ namespace StickyWebBackend
 
         public T Data { get; set; }
 
-        public EndpointAnswer(Status status, String message = null, T data = default) 
+        public EndpointAnswer(Status status, string message = "", T data = default) 
         {
             Status = status;
             Message = message;

@@ -17,6 +17,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 using MongoDB.Driver;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualBasic;
+using System.Diagnostics;
 
 namespace StickyWebBackend
 {
@@ -26,10 +27,10 @@ namespace StickyWebBackend
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            Console.WriteLine("Sticky Web Backend starting!");
+
             Backend backend = new Backend();
             backend.Startup(builder);
-
-            Console.WriteLine("Sticky Web Backend started!");
         }
     }
 
@@ -80,12 +81,9 @@ namespace StickyWebBackend
             });
 
 
-
-
             var app = builder.Build();
 
             InitializeDynamicConfiguration(app, configuration);
-
 
 
             // Configure the HTTP request pipeline.
@@ -100,7 +98,7 @@ namespace StickyWebBackend
                 });
                 app.UseSwaggerUI(option => {
                     // Where to look for json file
-                    option.SwaggerEndpoint("/api/swagger/v1/swagger.json", "Backend");
+                    option.SwaggerEndpoint("/api/swagger/v1/swagger.json", "Sticky-Web-Backend");
 
                     // Prefix in the URL of the UI (mydomain.com/api/swagger/index.html)
                     option.RoutePrefix = "api/swagger";
@@ -137,12 +135,11 @@ namespace StickyWebBackend
         public void InitializeDynamicConfiguration(WebApplication app, IConfiguration configuration) 
         {
             // Read project configuration to get path to dynamic configuration file
-            string? dynamicConfigurationFilePath = configuration.GetValue<string>("DynamicConfigurationPath");
-
-            if (dynamicConfigurationFilePath == null) 
+            string dynamicConfigurationFilePath;
+            if (!Utils.GetValue(configuration.GetValue<string>("DynamicConfigurationPath"), out dynamicConfigurationFilePath))
             {
-                throw new Exception("No dynamic configuration path detected in app settings!");
-            }
+                Utils.ErrorExit($"No path to dynamic configuration file detected in app settings!");
+            } 
 
             DynamicConfiguration dynamicConfiguration = new DynamicConfiguration(dynamicConfigurationFilePath);
 
@@ -151,14 +148,27 @@ namespace StickyWebBackend
             if (databaseConnectionString != null && dynamicConfiguration.Databases != null) 
             {
                 MongoClient databaseClient = new MongoClient(databaseConnectionString);
+                if (databaseClient == null)
+                {
+                    Utils.ErrorExit($"Could not connect to the database!\nMake sure database is running and connection string is valid");
+                    throw new UnreachableException();
+                }
+
                 foreach (DatabaseDefinition databaseDefinition in dynamicConfiguration.Databases)
                 {
                     Console.WriteLine($"Initializing database: {databaseDefinition.Name}");
 
                     // Initialize database
+                    IMongoDatabase mongoDatabase = databaseClient.GetDatabase(databaseDefinition.Name);
+                    if (mongoDatabase == null)
+                    {
+                        Utils.ErrorExit($"Could not find database {databaseDefinition.Name}!");
+                        throw new UnreachableException();
+                    }
+
                     Database database = new Database()
                     {
-                       Value = databaseClient.GetDatabase(databaseDefinition.Name),
+                       Value = mongoDatabase,
                        Collections = new Dictionary<string, IMongoCollection<BsonDocument>>()
                     };
 
@@ -166,20 +176,41 @@ namespace StickyWebBackend
                     foreach (DatabaseCollectionDefinition databaseCollectionDefinition in databaseDefinition.Collections) 
                     {
                         Console.WriteLine($" Initializing database collection: {databaseCollectionDefinition.Name}");
-                        database.Collections.Add(databaseCollectionDefinition.Name, database.Value.GetCollection<BsonDocument>(databaseCollectionDefinition.Name));
+
+                        IMongoCollection<BsonDocument> mongoCollection = database.Value.GetCollection<BsonDocument>(databaseCollectionDefinition.Name);
+                        if (mongoDatabase == null)
+                        {
+                            Utils.ErrorExit($"Could not find collection {databaseCollectionDefinition.Name} in database {databaseDefinition.Name}!");
+                        }
+
+                        database.Collections.Add(databaseCollectionDefinition.Name, mongoCollection);
                     }
 
                     databases.Add(databaseDefinition.Name, database);
                 }
             }
 
+            List<EndpointGroupDefinition> endpointGroups = new List<EndpointGroupDefinition>();
+            if (dynamicConfiguration.EndpointGroups == null || dynamicConfiguration.EndpointGroups.Count == 0) 
+            {
+                Console.WriteLine($"No endpoint groups to create detected in the dynamic configuration");
+                return;
+            }
+            else
+            {
+                endpointGroups.AddRange(dynamicConfiguration.EndpointGroups);
+            }
+
             // Setup endpoints
-            foreach (EndpointGroupDefinition endpointGroupDefinition in dynamicConfiguration.EndpointGroups)
+            foreach (EndpointGroupDefinition endpointGroupDefinition in endpointGroups)
             {
                 Console.WriteLine($"Initializing endpoint group: {endpointGroupDefinition.Name}");
-                string baseEndpointPath = endpointGroupDefinition.Path;
 
-                Console.WriteLine($"Inxx: {endpointGroupDefinition.Path} {endpointGroupDefinition.Endpoints.Count} ");
+                string baseEndpointPath;
+                if (!Utils.GetValue(endpointGroupDefinition.Path, out baseEndpointPath))
+                {
+                    Utils.ErrorExit($"Incorrect endpoint group path {endpointGroupDefinition.Name}!");
+                }    
 
                 foreach (EndpointDefinition endpointDefinition in endpointGroupDefinition.Endpoints)
                 {
@@ -194,67 +225,78 @@ namespace StickyWebBackend
                         case "POST":
                             CreatePostEndpoint(app, dynamicConfiguration, endpointDefinition, baseEndpointPath);
                             break;
+                        case "DELETE":
+                            CreateDeleteEndpoint(app, dynamicConfiguration, endpointDefinition, baseEndpointPath);
+                            break;
                         default:
-                            throw new Exception($"Unknown endpoint method: {endpointDefinition.Method}");
+                            Utils.ErrorExit($"Unknown endpoint method {endpointDefinition.Method} for endpoint {endpointDefinition.Name}");
+                            break;
                     }
                 }
             }   
         }
 
-        private void CreatePostEndpoint(WebApplication app, DynamicConfiguration dynamicConfiguration, EndpointDefinition endpointDefinition, string baseEndpointPath)
-        {
-            //throw new NotImplementedException();
-        }
-
-        private void CreateGetEndpoint(WebApplication app, DynamicConfiguration dynamicConfiguration, EndpointDefinition endpointDefinition, string baseEndpointPath) 
+        private Func<string, Task<IActionResult>> GetHandleRequestFunction(DynamicConfiguration dynamicConfiguration, EndpointDefinition endpointDefinition) 
         {
             Func<string, Task<IActionResult>> handleRequest = async (string id) =>
             {
-                EndpointBodyDefinition endpointBodyDefinition = dynamicConfiguration?.EndpointBodies?.First(o => o.Name == endpointDefinition.BodyName);
+                List<EndpointBodyDefinition> endpointBodies;
+                if (!Utils.GetValue(dynamicConfiguration.EndpointBodies, out endpointBodies))
+                {
+                    Utils.ErrorExit($"No endpoint bodies detected in the dynamic configuration!");
+                }    
+
+                EndpointBodyDefinition endpointBodyDefinition;
+                if (!Utils.GetValue(endpointBodies.Find(o => o.Name == endpointDefinition.BodyName), out endpointBodyDefinition))
+                {
+                    Utils.ErrorExit($"No endpoint body named {endpointDefinition.BodyName} detected for endpoint {endpointDefinition.Name} in the dynamic configuration!");
+                }
 
                 // Define dynamic model class to operate on
                 if (endpointDefinition.Action.Type == EndpointActionType.Default) 
                 {
-                    EndpointDefaultActionDefinition endpointDefaultActionDefinition = endpointDefinition.Action as EndpointDefaultActionDefinition;
+                    EndpointDefaultActionDefinition endpointDefaultActionDefinition;
+                    if (!Utils.GetValue(endpointDefinition.Action as EndpointDefaultActionDefinition, out endpointDefaultActionDefinition))
+                    {
+                        Utils.ErrorExit($"No endpoint action named {endpointDefinition.BodyName} detected for endpoint {endpointDefinition.Name} in the dynamic configuration!");
+                    }
+
                     return await DefaultActions.GetAsync(endpointDefaultActionDefinition, databases, id, endpointBodyDefinition);
                 }
                 else if (endpointDefinition.Action.Type == EndpointActionType.Custom)
                 {
-                    EndpointCustomActionDefinition endpointCustomActionDefinition = endpointDefinition.Action as EndpointCustomActionDefinition;
+                    EndpointCustomActionDefinition endpointCustomActionDefinition;
+                    if (!Utils.GetValue(endpointDefinition.Action as EndpointCustomActionDefinition, out endpointCustomActionDefinition))
+                    {
+                        Utils.ErrorExit($"No endpoint action named {endpointDefinition.BodyName} detected for endpoint {endpointDefinition.Name} in the dynamic configuration!");
+                    }
+
                     return customActions[endpointCustomActionDefinition.Name]();
                 }
                 else
                 {
-                    throw new Exception($"Unknown endpoint action type: {endpointDefinition.Action.Type}");
+                    Utils.ErrorExit($"Unknown endpoint action type: {endpointDefinition.Action.Type}");
+                    throw new UnreachableException();
                 }
             };
 
-            app.MapGet(baseEndpointPath + "/{id}", handleRequest);
-
-
-            // app.MapGet(baseEndpointPath + "/{id}", async (string id) => {
-
-            // EndpointBodyDefinition endpointBodyDefinition = dynamicConfiguration?.EndpointBodies?.First(o => o.Name == endpointDefinition.BodyName);
-
-            // // Define dynamic model class to operate on
-            // if (endpointDefinition.Action.Type == EndpointActionType.Default) 
-            // {
-            //     EndpointDefaultActionDefinition endpointDefaultActionDefinition = endpointDefinition.Action as EndpointDefaultActionDefinition;
-            //     return DefaultActions.GetAsync(endpointDefaultActionDefinition, databases, id, endpointBodyDefinition);
-            // }
-            // else if (endpointDefinition.Action.Type == EndpointActionType.Custom)
-            // {
-            //     EndpointCustomActionDefinition endpointCustomActionDefinition = endpointDefinition.Action as EndpointCustomActionDefinition;
-            //     return customActions[endpointCustomActionDefinition.Name]();
-            // }
-            // else
-            // {
-            //     throw new Exception($"Unknown endpoint action type: {endpointDefinition.Action.Type}");
-            // }
-            // });
-       // }
+            return handleRequest;
         }
 
+        private void CreateGetEndpoint(WebApplication app, DynamicConfiguration dynamicConfiguration, EndpointDefinition endpointDefinition, string baseEndpointPath) 
+        {
+            app.MapGet(baseEndpointPath + "/{id}", GetHandleRequestFunction(dynamicConfiguration, endpointDefinition));
+        }
+        
+        private void CreatePostEndpoint(WebApplication app, DynamicConfiguration dynamicConfiguration, EndpointDefinition endpointDefinition, string baseEndpointPath)
+        {
+            app.MapPost(baseEndpointPath, GetHandleRequestFunction(dynamicConfiguration, endpointDefinition));
+        }
+
+        private void CreateDeleteEndpoint(WebApplication app, DynamicConfiguration dynamicConfiguration, EndpointDefinition endpointDefinition, string baseEndpointPath)
+        {
+            app.MapDelete(baseEndpointPath + "/{id}", GetHandleRequestFunction(dynamicConfiguration, endpointDefinition));  
+        }
     }
 
     // Needed to display enum variables of model as strings instead of integers
@@ -269,8 +311,14 @@ namespace StickyWebBackend
                 model.Enum.Clear();
                 foreach (string enumName in Enum.GetNames(context.Type))
                 {
-                    System.Reflection.MemberInfo memberInfo = context.Type.GetMember(enumName).FirstOrDefault(m => m.DeclaringType == context.Type);
-                    EnumMemberAttribute enumMemberAttribute = memberInfo == null ? null : memberInfo.GetCustomAttributes(typeof(EnumMemberAttribute), false).OfType<EnumMemberAttribute>().FirstOrDefault();
+                    System.Reflection.MemberInfo? memberInfo = context.Type.GetMember(enumName).FirstOrDefault(m => m.DeclaringType == context.Type);
+                    EnumMemberAttribute? enumMemberAttribute = memberInfo == null ? null : memberInfo.GetCustomAttributes(typeof(EnumMemberAttribute), false).OfType<EnumMemberAttribute>().FirstOrDefault();
+                    
+                    if (memberInfo == null || enumMemberAttribute == null)
+                    {
+                        throw new Exception();
+                    }
+
                     string label = enumMemberAttribute == null || string.IsNullOrWhiteSpace(enumMemberAttribute.Value) ? enumName : enumMemberAttribute.Value;
                     model.Enum.Add(new OpenApiString(label));
                 }
