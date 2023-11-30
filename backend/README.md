@@ -36,12 +36,14 @@ Local generation:
 3. `docfx .\docs\docfx.json --serve` 
 4. Preview at [](http://localhost:8080)
 
+## Development
+`dotnet run --environment "Development"`
+
 ## Dynamic configuration
 Dynamic configuration is stored in `config.json` file.
 In development build app will fetch it from project's parent folder 
 In release build app will fetch it from folder in which it is executed TODO
 (Unless changed in appsettings)
-
 
 ## Running
 `dotnet restore`

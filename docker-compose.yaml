@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
 # --- DATABASE -----------------------------------------
-  swf-database:
+  database:
     image: mongo
     container_name: swf-database
     domainname: sticky-web-framework
@@ -13,13 +13,13 @@ services:
     ports:
       - 27017:27017
     volumes:
-      - ./volumes/database:/data/db # Local volume
+      - ./database/volume:/data/db # Local volume
       #- ./config/database/init.js:/docker-entrypoint-initdb.d/init-mongo.js:ro # Setup script run on container start
     networks:
       - swf-net
 
 # --- NGINX SERVER -------------------------------------
-  swf-nginx:
+  nginx:
     image: nginx:latest
     container_name: swf-nginx
     build:
@@ -29,31 +29,33 @@ services:
       - 80:80
       - 443:443
     volumes:
-      - ./volume/ssl_certificates:/etc/nginx/ssl:ro
+      - ./nginx/volume/ssl_certificates:/etc/nginx/ssl:ro
     restart: always
     depends_on:
-      - swf-backend
-      - swf-frontend
+      - backend
+      - frontend
     networks:
       - swf-net
 
 # --- STICKY WEB BACKEND -------------------------------
-  swf-backend:
+  backend:
     image: swf-backend
     container_name: swf-backend
     hostname: swf-backend
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${BACKEND_MODE}
     build:
       context: ./backend
       dockerfile: Dockerfile
     ports:
       - 4000:4000
     depends_on:
-      - swf-database
+      - database
     networks:
       - swf-net
 
 # --- STICKY WEB FRONTEND ------------------------------
-  swf-frontend:
+  frontend:
     image: swf-frontend
     container_name: swf-frontend
     domainname: sticky-web-framework

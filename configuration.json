@@ -1,12 +1,13 @@
 {
-  "DatabaseConnectionString": "mongodb://root:root@cem-database:27017",
+  "DatabaseConnectionString": "mongodb://root:root@localhost:27017/?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&ssl=false",
   "Databases": [
     {
       "Name": "Main",
       "Collections": [
         {
           "Name": "Companies",
-          "Model": "Company"
+          "Model": "Company",
+          "InitialData": "./Database/InitialData/Companies.js"
         }
       ]
     }
@@ -30,6 +31,16 @@
           "Name": "AddCompany",
           "Method": "POST",
           "BodyName": "AddCompany",
+          "Action": {
+            "Type": "Default",
+            "DatabaseName": "Main",
+            "DatabaseCollectionName": "Companies"
+          }
+        },
+        {
+          "Name": "DeleteCompany",
+          "Method": "DELETE",
+          "BodyName": "DeleteCompany",
           "Action": {
             "Type": "Default",
             "DatabaseName": "Main",
