@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using MongoDB.Bson;
@@ -19,6 +20,8 @@ namespace StickyWebBackend
 
     public abstract class EndpointActionDefinition
     {
+        [EnumDataType(typeof(EndpointActionType))]
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public required EndpointActionType Type { get; set; }
     }
 
@@ -32,70 +35,6 @@ namespace StickyWebBackend
     {
         public required string Name { get; set; }
     }
-
-    
-
-    public class EndpointActionDefinitionConverter : JsonConverter<EndpointActionDefinition>
-{
-    public override EndpointActionDefinition Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-    {
-        using (JsonDocument doc = JsonDocument.ParseValue(ref reader))
-        {
-            var root = doc.RootElement;
-            var type = root.GetProperty("Type").GetString();
-
-            return type switch
-            {
-                "Default" => JsonSerializer.Deserialize<EndpointDefaultActionDefinition>(root.GetRawText(), options),
-                "Custom" => JsonSerializer.Deserialize<EndpointCustomActionDefinition>(root.GetRawText(), options),
-                _ => throw new NotSupportedException($"Unsupported EndpointActionType: {type}")
-            };
-        }
-    }
-
-    public override void Write(Utf8JsonWriter writer, EndpointActionDefinition value, JsonSerializerOptions options)
-    {
-        // For simplicity, let's assume we only need to serialize from the object to JSON,
-        // and not the reverse. If bidirectional serialization is required, additional
-        // logic for the Write method should be implemented.
-        throw new NotImplementedException();
-    }
-}
-
-public class EndpointActionDefinitionConverteraX : JsonConverter<EndpointActionDefinition>
-{
-    public override EndpointActionDefinition Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-    {
-        using (JsonDocument doc = JsonDocument.ParseValue(ref reader))
-        {
-            var root = doc.RootElement;
-            if (root.TryGetProperty("Type", out var typeProperty))
-            {
-                if (typeProperty.ValueKind == JsonValueKind.String)
-                {
-                    string typeString = typeProperty.GetString();
-                    return typeString switch
-                    {
-                        "Default" => JsonSerializer.Deserialize<EndpointDefaultActionDefinition>(root.GetRawText(), options),
-                        "Custom" => JsonSerializer.Deserialize<EndpointCustomActionDefinition>(root.GetRawText(), options),
-                        _ => throw new JsonException($"Unexpected 'Type' value: {typeString}"),
-                    };
-                }
-                else
-                {
-                    throw new JsonException($"Unexpected 'Type' value type: {typeProperty.ValueKind}");
-                }
-            }
-            throw new JsonException("Missing 'Type' property");
-        }
-    }
-
-    public override void Write(Utf8JsonWriter writer, EndpointActionDefinition value, JsonSerializerOptions options)
-    {
-        JsonSerializer.Serialize(writer, value, value.GetType(), options);
-    }
-}
-
 
     public class DynamicConfiguration
     {
@@ -118,35 +57,14 @@ public class EndpointActionDefinitionConverteraX : JsonConverter<EndpointActionD
             var absoluteConfigurationPath = Path.Combine(Directory.GetCurrentDirectory(), dynamicConfigurationFilePath);
             string json = File.ReadAllText(absoluteConfigurationPath);
 
-
-           // DynamicConfiguration endpoint = JsonConverter. JsonConvert.DeserializeObject<DynamicConfiguration>(json);
-            
-            DynamicConfiguration dynamicConfiguration = JsonSerializer.Deserialize<DynamicConfiguration>(json, new JsonSerializerOptions
+            JsonSerializerOptions options = new JsonSerializerOptions
             {
-                 Converters = { new EndpointActionDefinitionConverteraX() },
+                Converters = { new EndpointActionDefinitionConverter() },
                 PropertyNameCaseInsensitive = true,
-            });
+            };
 
-            // DynamicConfiguration dynamicConfiguration = JsonSerializer.Deserialize<DynamicConfiguration>(json, new JsonSerializerOptions
-            // {
-            //     Converters = { new EndpointActionDefinitionConverter() },
-            //     PropertyNameCaseInsensitive = true, // Use this if your JSON has different casing
-            //     // Add other options as needed
-            // });
-
-
-            // DynamicConfiguration configuration = JsonSerializer.Deserialize<DynamicConfiguration>(json, new JsonSerializerOptions
-            // {
-            //     Converters = { new EndpointActionDefinitionConverter() },
-            //     PropertyNameCaseInsensitive = true, // Use this if your JSON has different casing
-            //     // Add other options as needed
-            // });
-
-
-            // DynamicConfiguration? dynamicConfiguration = new ConfigurationBuilder()
-            //     .AddJsonFile(absoluteConfigurationPath, optional: false, reloadOnChange: true)
-            //     .Build().GetSection("Configuration").Get<DynamicConfiguration>();
-
+            DynamicConfiguration? dynamicConfiguration = JsonSerializer.Deserialize<DynamicConfiguration>(json, options);
+            
             if (dynamicConfiguration == null) 
             {
                 throw new Exception($"Dynamic configuration file is empty: {dynamicConfigurationFilePath}");
@@ -189,6 +107,8 @@ public class EndpointActionDefinitionConverteraX : JsonConverter<EndpointActionD
         public required string Name { get; set; }
         public required string Method { get; set; }
         public required string BodyName { get; set; }
+
+        [JsonConverter(typeof(EndpointActionDefinitionConverter))]
         public required EndpointActionDefinition Action { get; set; }
     }
 
@@ -203,4 +123,36 @@ public class EndpointActionDefinitionConverteraX : JsonConverter<EndpointActionD
         public required string Name { get; set; }
         public required List<FieldDefinition> Fields { get; set; }
     }
+
+
+
+    public class EndpointActionDefinitionConverter : JsonConverter<EndpointActionDefinition>
+    {
+        public override EndpointActionDefinition Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            using (JsonDocument doc = JsonDocument.ParseValue(ref reader))
+            {
+                var root = doc.RootElement;
+
+                // Deserialize the EndpointActionDefinition based on the EndpointActionType
+                EndpointActionType endpointActionType;
+                Enum.TryParse(root.GetProperty("Type").ToString(), out endpointActionType);
+
+                switch (endpointActionType){
+                    case EndpointActionType.Custom:
+                        return JsonSerializer.Deserialize<EndpointCustomActionDefinition>(root.GetRawText());
+                    case EndpointActionType.Default:
+                        return JsonSerializer.Deserialize<EndpointDefaultActionDefinition>(root.GetRawText());
+                    default:
+                        throw new Exception($"Unknown action type in config: {endpointActionType}");
+                }
+            }
+        }
+
+        public override void Write(Utf8JsonWriter writer, EndpointActionDefinition value, JsonSerializerOptions options)
+        {
+            JsonSerializer.Serialize(writer, value, value.GetType(), options);
+        }
+    }
+
 }
