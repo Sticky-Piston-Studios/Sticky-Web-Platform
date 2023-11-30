@@ -132,33 +132,19 @@ namespace StickyWebBackend
 
             app.Run();
         }
-    
-    
+
+
         public void InitializeDynamicConfiguration(WebApplication app, IConfiguration configuration) 
         {
-            // Read dynamic configuration
-            string? dynamicConfigurationPath = configuration.GetValue<string>("DynamicConfigurationPath");
+            // Read project configuration to get path to dynamic configuration file
+            string? dynamicConfigurationFilePath = configuration.GetValue<string>("DynamicConfigurationPath");
 
-            if (dynamicConfigurationPath == null) 
+            if (dynamicConfigurationFilePath == null) 
             {
                 throw new Exception("No dynamic configuration path detected in app settings!");
             }
 
-            if (!File.Exists(dynamicConfigurationPath)) 
-            {
-                throw new Exception($"Dynamic configuration file doesn't exist: {dynamicConfigurationPath}");
-            }
-
-            // Read dynamic configuration
-            var absoluteConfigurationPath = Path.Combine(Directory.GetCurrentDirectory(), dynamicConfigurationPath);
-            DynamicConfiguration? dynamicConfiguration = new ConfigurationBuilder()
-                .AddJsonFile(absoluteConfigurationPath, optional: false, reloadOnChange: true)
-                .Build().GetSection("Configuration").Get<DynamicConfiguration>();
-
-            if (dynamicConfiguration == null) 
-            {
-                throw new Exception($"Dynamic configuration file is empty: {dynamicConfigurationPath}");
-            }
+            DynamicConfiguration dynamicConfiguration = new DynamicConfiguration(dynamicConfigurationFilePath);
 
             // Setup databases
             string? databaseConnectionString = dynamicConfiguration.DatabaseConnectionString;

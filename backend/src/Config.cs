@@ -17,50 +17,84 @@ namespace StickyWebBackend
         Custom,
     }
 
-    public abstract class EndpointAction
+    public abstract class EndpointActionDefinition
     {
         public required EndpointActionType Type { get; set; }
     }
 
-    public class EndpointDefaultActionDefinition : EndpointAction
+    public class EndpointDefaultActionDefinition : EndpointActionDefinition
     {
         public required string DatabaseName { get; set; }
         public required string DatabaseCollectionName { get; set; }
     }
 
-    public class EndpointCustomActionDefinition : EndpointAction
+    public class EndpointCustomActionDefinition : EndpointActionDefinition
     {
         public required string Name { get; set; }
     }
 
-    public class EndpointActionConverter : JsonConverter<EndpointAction>
+    
+
+    public class EndpointActionDefinitionConverter : JsonConverter<EndpointActionDefinition>
+{
+    public override EndpointActionDefinition Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        public override EndpointAction Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        using (JsonDocument doc = JsonDocument.ParseValue(ref reader))
         {
-            var jsonObject = JsonDocument.ParseValue(ref reader).RootElement;
+            var root = doc.RootElement;
+            var type = root.GetProperty("Type").GetString();
 
-            if (jsonObject.TryGetProperty("Type", out var typeProperty))
+            return type switch
             {
-                var type = typeProperty.GetString();
-
-                if (type == "Default")
-                {
-                    return JsonSerializer.Deserialize<EndpointDefaultActionDefinition>(jsonObject.GetRawText())!;
-                }
-                else if (type == "Custom")
-                {
-                    return JsonSerializer.Deserialize<EndpointCustomActionDefinition>(jsonObject.GetRawText())!;
-                }
-            }
-
-            throw new JsonException();
-        }
-
-        public override void Write(Utf8JsonWriter writer, EndpointAction value, JsonSerializerOptions options)
-        {
-            throw new NotImplementedException();
+                "Default" => JsonSerializer.Deserialize<EndpointDefaultActionDefinition>(root.GetRawText(), options),
+                "Custom" => JsonSerializer.Deserialize<EndpointCustomActionDefinition>(root.GetRawText(), options),
+                _ => throw new NotSupportedException($"Unsupported EndpointActionType: {type}")
+            };
         }
     }
+
+    public override void Write(Utf8JsonWriter writer, EndpointActionDefinition value, JsonSerializerOptions options)
+    {
+        // For simplicity, let's assume we only need to serialize from the object to JSON,
+        // and not the reverse. If bidirectional serialization is required, additional
+        // logic for the Write method should be implemented.
+        throw new NotImplementedException();
+    }
+}
+
+public class EndpointActionDefinitionConverteraX : JsonConverter<EndpointActionDefinition>
+{
+    public override EndpointActionDefinition Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        using (JsonDocument doc = JsonDocument.ParseValue(ref reader))
+        {
+            var root = doc.RootElement;
+            if (root.TryGetProperty("Type", out var typeProperty))
+            {
+                if (typeProperty.ValueKind == JsonValueKind.String)
+                {
+                    string typeString = typeProperty.GetString();
+                    return typeString switch
+                    {
+                        "Default" => JsonSerializer.Deserialize<EndpointDefaultActionDefinition>(root.GetRawText(), options),
+                        "Custom" => JsonSerializer.Deserialize<EndpointCustomActionDefinition>(root.GetRawText(), options),
+                        _ => throw new JsonException($"Unexpected 'Type' value: {typeString}"),
+                    };
+                }
+                else
+                {
+                    throw new JsonException($"Unexpected 'Type' value type: {typeProperty.ValueKind}");
+                }
+            }
+            throw new JsonException("Missing 'Type' property");
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, EndpointActionDefinition value, JsonSerializerOptions options)
+    {
+        JsonSerializer.Serialize(writer, value, value.GetType(), options);
+    }
+}
 
 
     public class DynamicConfiguration
@@ -70,6 +104,60 @@ namespace StickyWebBackend
         public List<EndpointGroupDefinition>? EndpointGroups { get; set; }
         public List<DatabaseModelDefinition>? DatabaseModels { get; set; }
         public List<EndpointBodyDefinition>? EndpointBodies { get; set; }
+
+        public DynamicConfiguration() {}
+
+        public DynamicConfiguration(string dynamicConfigurationFilePath)
+        {
+            if (!File.Exists(dynamicConfigurationFilePath)) 
+            {
+                throw new Exception($"Dynamic configuration file doesn't exist: {dynamicConfigurationFilePath}");
+            }
+
+            // Read dynamic configuration
+            var absoluteConfigurationPath = Path.Combine(Directory.GetCurrentDirectory(), dynamicConfigurationFilePath);
+            string json = File.ReadAllText(absoluteConfigurationPath);
+
+
+           // DynamicConfiguration endpoint = JsonConverter. JsonConvert.DeserializeObject<DynamicConfiguration>(json);
+            
+            DynamicConfiguration dynamicConfiguration = JsonSerializer.Deserialize<DynamicConfiguration>(json, new JsonSerializerOptions
+            {
+                 Converters = { new EndpointActionDefinitionConverteraX() },
+                PropertyNameCaseInsensitive = true,
+            });
+
+            // DynamicConfiguration dynamicConfiguration = JsonSerializer.Deserialize<DynamicConfiguration>(json, new JsonSerializerOptions
+            // {
+            //     Converters = { new EndpointActionDefinitionConverter() },
+            //     PropertyNameCaseInsensitive = true, // Use this if your JSON has different casing
+            //     // Add other options as needed
+            // });
+
+
+            // DynamicConfiguration configuration = JsonSerializer.Deserialize<DynamicConfiguration>(json, new JsonSerializerOptions
+            // {
+            //     Converters = { new EndpointActionDefinitionConverter() },
+            //     PropertyNameCaseInsensitive = true, // Use this if your JSON has different casing
+            //     // Add other options as needed
+            // });
+
+
+            // DynamicConfiguration? dynamicConfiguration = new ConfigurationBuilder()
+            //     .AddJsonFile(absoluteConfigurationPath, optional: false, reloadOnChange: true)
+            //     .Build().GetSection("Configuration").Get<DynamicConfiguration>();
+
+            if (dynamicConfiguration == null) 
+            {
+                throw new Exception($"Dynamic configuration file is empty: {dynamicConfigurationFilePath}");
+            }
+
+            DatabaseConnectionString = dynamicConfiguration.DatabaseConnectionString;
+            Databases = dynamicConfiguration.Databases;
+            EndpointGroups = dynamicConfiguration.EndpointGroups; 
+            DatabaseModels = dynamicConfiguration.DatabaseModels;
+            EndpointBodies = dynamicConfiguration.EndpointBodies;
+        }
     }
 
     public class DatabaseDefinition {
@@ -101,7 +189,7 @@ namespace StickyWebBackend
         public required string Name { get; set; }
         public required string Method { get; set; }
         public required string BodyName { get; set; }
-        public required EndpointAction Action { get; set; }
+        public required EndpointActionDefinition Action { get; set; }
     }
 
     public class EndpointBodyDefinition

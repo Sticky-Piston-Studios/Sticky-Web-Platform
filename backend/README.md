@@ -46,3 +46,8 @@ In release build app will fetch it from folder in which it is executed TODO
 ## Running
 `dotnet restore`
 `dotnet run --environment "Development"`
+
+## Testing
+This project is using NUnit testing framework.  
+Install ".NET Core Test Explorer" extension to perform tests in VS Code.  
+Make sure that your VS Code settings have `"dotnet-test-explorer.testProjectPath": "./backend/tests/*.csproj"` added. Tests won't be detected and presented in testing panel without it.  
