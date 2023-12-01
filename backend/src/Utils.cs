@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text.Json.Serialization;
 using System.Diagnostics;
 using Microsoft.IdentityModel.Tokens;
+using MongoDB.Bson.IO;
 
 
 namespace StickyWebBackend
@@ -150,8 +151,25 @@ namespace StickyWebBackend
 
                 if (item == null) 
                 {
-                    return new EndpointAnswer<T>(Status.Failure, "Item for given search criteria wasn't found");        
+                    return new EndpointAnswer<T>(Status.Failure, "Item for given search criteria not found");        
                 }
+
+                // var dotNetObj = BsonTypeMapper.MapToDotNetValue(item as BsonDocument);
+
+                // string xxx = JsonSerializer.Serialize(dotNetObj);
+
+                 var jsonDataContent= item.ToJson();
+                Console.WriteLine(Newtonsoft.Json.JsonConvert.DeserializeObject(jsonDataContent));
+
+
+                var jsonWriterSettings = new JsonWriterSettings 
+                { 
+                    OutputMode = JsonOutputMode.Shell,
+                }; 
+                Console.WriteLine("aaad" + item.ToJson(jsonWriterSettings));
+
+
+                Console.WriteLine("xxxxxxxxxxx " + item.ToJson());
 
                 return new EndpointAnswer<T>(Status.Success, "", item);
             }

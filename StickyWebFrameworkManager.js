@@ -95,12 +95,15 @@ function runDockerCompose() {
 
 async function connectToDatabase() {
 	// Get DatabaseConnectionString from the config
-	const databaseConnectionString = config.DatabaseConnectionString;
+	var databaseConnectionString = config.DatabaseConnectionString;
 
 	if (!databaseConnectionString) {
 		console.error('DatabaseConnectionString not found in the configuration file.');
 		process.exit(1);
 	}
+
+	// TODO: Remove this when both script and backend will be able to connect to the database vis the same connection string
+	databaseConnectionString = databaseConnectionString.replace('swf-database', "localhost");
 
 	// Initialize the database
 	const client = new MongoClient(databaseConnectionString);

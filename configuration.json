@@ -1,5 +1,5 @@
 {
-  "DatabaseConnectionString": "mongodb://root:root@localhost:27017/?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&ssl=false",
+  "DatabaseConnectionString": "mongodb://root:root@swf-database:27017",
   "Databases": [
     {
       "Name": "Main",

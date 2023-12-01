@@ -134,7 +134,6 @@ namespace StickyWebBackend
             app.Run();
         }
 
-
         public void InitializeDynamicConfiguration(WebApplication app, IConfiguration configuration) 
         {
             Console.WriteLine("Initializing dynamic configuration");
@@ -148,16 +147,32 @@ namespace StickyWebBackend
 
             DynamicConfiguration dynamicConfiguration = new DynamicConfiguration(dynamicConfigurationFilePath);
 
-            // Setup databases
+            InitializeDatabases(dynamicConfiguration);
+           
+            InitializeEndpoints(app, dynamicConfiguration);
+        }
+
+        public void InitializeDatabases(DynamicConfiguration dynamicConfiguration)
+        {
+             // Setup databases
             string? databaseConnectionString = dynamicConfiguration.DatabaseConnectionString;
             if (databaseConnectionString != null && dynamicConfiguration.Databases != null) 
             {
-                MongoClient databaseClient = new MongoClient(databaseConnectionString);
+                MongoClientSettings MongoClientSettings = MongoClientSettings.FromConnectionString(databaseConnectionString);
+                MongoClientSettings.ConnectTimeout = TimeSpan.FromSeconds(5);
+                MongoClientSettings.ServerSelectionTimeout = TimeSpan.FromSeconds(5);
+                MongoClientSettings.SocketTimeout = TimeSpan.FromSeconds(5);
+
+                MongoClient databaseClient = new MongoClient(MongoClientSettings);
+
                 if (databaseClient == null)
                 {
                     Utils.ErrorExit($"Could not connect to the database!\nMake sure database is running and connection string is valid");
                     throw new UnreachableException();
                 }
+
+                Console.WriteLine($"Connected to mongo database container");
+
 
                 foreach (DatabaseDefinition databaseDefinition in dynamicConfiguration.Databases)
                 {
@@ -194,7 +209,10 @@ namespace StickyWebBackend
                     databases.Add(databaseDefinition.Name, database);
                 }
             }
+        }
 
+        public void InitializeEndpoints(WebApplication app,  DynamicConfiguration dynamicConfiguration)
+        {
             List<EndpointGroupDefinition> endpointGroups = new List<EndpointGroupDefinition>();
             if (dynamicConfiguration.EndpointGroups == null || dynamicConfiguration.EndpointGroups.Count == 0) 
             {
@@ -241,10 +259,93 @@ namespace StickyWebBackend
             }   
         }
 
-        private Func<string, Task<IActionResult>> GetHandleRequestFunction(DynamicConfiguration dynamicConfiguration, EndpointDefinition endpointDefinition) 
+        // private void CreateGetEndpoint(WebApplication app, DynamicConfiguration dynamicConfiguration, EndpointDefinition endpointDefinition, string baseEndpointPath) 
+        // {
+        //     app.MapGet(baseEndpointPath + "/{id}", GetHandleRequestFunction(dynamicConfiguration, endpointDefinition));
+        // }
+
+         private void CreateGetEndpoint(WebApplication app, DynamicConfiguration dynamicConfiguration, EndpointDefinition endpointDefinition, string baseEndpointPath) 
         {
-            Func<string, Task<IActionResult>> handleRequest = async (string id) =>
+            app.MapGet(baseEndpointPath + "/{id}", GetHandleRequestFunction(dynamicConfiguration, endpointDefinition));
+            //app.MapGet(baseEndpointPath + "/{id}", async context => await HandleRequest(context, dynamicConfiguration, endpointDefinition));
+        }
+
+//         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(OkObjectResult))]
+// [ProducesResponseType(StatusCodes.Status404NotFound)]
+        private async Task<IActionResult> HandleRequest(HttpContext context, DynamicConfiguration dynamicConfiguration, EndpointDefinition endpointDefinition) 
+        {
+            string id = context.Request.RouteValues["id"] as string;
+
+            List<EndpointBodyDefinition> endpointBodies;
+            if (!Utils.GetValue(dynamicConfiguration.EndpointBodies, out endpointBodies))
             {
+                Utils.ErrorExit($"No endpoint bodies detected in the dynamic configuration!");
+            }    
+
+            EndpointBodyDefinition endpointBodyDefinition;
+            if (!Utils.GetValue(endpointBodies.Find(o => o.Name == endpointDefinition.BodyName), out endpointBodyDefinition))
+            {
+                Utils.ErrorExit($"No endpoint body named {endpointDefinition.BodyName} detected for endpoint {endpointDefinition.Name} in the dynamic configuration!");
+            }
+
+            // Perform action
+            if (endpointDefinition.Action.Type == EndpointActionType.Default) 
+            {
+                EndpointDefaultActionDefinition endpointDefaultActionDefinition;
+                if (!Utils.GetValue(endpointDefinition.Action as EndpointDefaultActionDefinition, out endpointDefaultActionDefinition))
+                {
+                    Utils.ErrorExit($"No endpoint action named {endpointDefinition.BodyName} detected for endpoint {endpointDefinition.Name} in the dynamic configuration!");
+                }
+
+                switch(endpointDefinition.Method) 
+                {
+                    case "GET":
+                                                return await DefaultActions.PostAsync(endpointDefaultActionDefinition, databases, id, endpointBodyDefinition);
+
+                    case "POST":
+                        return await DefaultActions.PostAsync(endpointDefaultActionDefinition, databases, id, endpointBodyDefinition);
+                    case "DELETE":
+                        return await DefaultActions.DeleteAsync(endpointDefaultActionDefinition, databases, id, endpointBodyDefinition);
+                    default:
+                        Utils.ErrorExit($"Unknown endpoint method {endpointDefinition.Method} for endpoint {endpointDefinition.Name}");
+                        throw new UnreachableException();
+                }
+            }
+            else if (endpointDefinition.Action.Type == EndpointActionType.Custom)
+            {
+                EndpointCustomActionDefinition endpointCustomActionDefinition;
+                if (!Utils.GetValue(endpointDefinition.Action as EndpointCustomActionDefinition, out endpointCustomActionDefinition))
+                {
+                    Utils.ErrorExit($"No endpoint action named {endpointDefinition.BodyName} detected for endpoint {endpointDefinition.Name} in the dynamic configuration!");
+                }
+
+                return customActions[endpointCustomActionDefinition.Name]();
+            }
+            else
+            {
+                Utils.ErrorExit($"Unknown endpoint action type: {endpointDefinition.Action.Type}");
+                throw new UnreachableException();
+            }
+        }
+        
+        private void CreatePostEndpoint(WebApplication app, DynamicConfiguration dynamicConfiguration, EndpointDefinition endpointDefinition, string baseEndpointPath)
+        {
+            app.MapPost(baseEndpointPath, GetHandleRequestFunction(dynamicConfiguration, endpointDefinition));
+        }
+
+        private void CreateDeleteEndpoint(WebApplication app, DynamicConfiguration dynamicConfiguration, EndpointDefinition endpointDefinition, string baseEndpointPath)
+        {
+            app.MapDelete(baseEndpointPath + "/{id}", GetHandleRequestFunction(dynamicConfiguration, endpointDefinition));  
+        }
+
+        private Func<HttpContext, Task<IActionResult>> GetHandleRequestFunction(DynamicConfiguration dynamicConfiguration, EndpointDefinition endpointDefinition) 
+        {
+            Func<HttpContext, Task<IActionResult>> handleRequest = async (HttpContext context) =>
+            {
+                string id = context.Request.RouteValues["id"] as string;
+
+                Console.WriteLine("xxxxxxxx" + id);
+
                 List<EndpointBodyDefinition> endpointBodies;
                 if (!Utils.GetValue(dynamicConfiguration.EndpointBodies, out endpointBodies))
                 {
@@ -257,7 +358,7 @@ namespace StickyWebBackend
                     Utils.ErrorExit($"No endpoint body named {endpointDefinition.BodyName} detected for endpoint {endpointDefinition.Name} in the dynamic configuration!");
                 }
 
-                // Define dynamic model class to operate on
+                // Perform action
                 if (endpointDefinition.Action.Type == EndpointActionType.Default) 
                 {
                     EndpointDefaultActionDefinition endpointDefaultActionDefinition;
@@ -266,7 +367,18 @@ namespace StickyWebBackend
                         Utils.ErrorExit($"No endpoint action named {endpointDefinition.BodyName} detected for endpoint {endpointDefinition.Name} in the dynamic configuration!");
                     }
 
-                    return await DefaultActions.GetAsync(endpointDefaultActionDefinition, databases, id, endpointBodyDefinition);
+                    switch(endpointDefinition.Method) 
+                    {
+                        case "GET":
+                            return await DefaultActions.GetAsync(endpointDefaultActionDefinition, databases, id, endpointBodyDefinition);
+                        case "POST":
+                            return await DefaultActions.PostAsync(endpointDefaultActionDefinition, databases, id, endpointBodyDefinition);
+                        case "DELETE":
+                            return await DefaultActions.DeleteAsync(endpointDefaultActionDefinition, databases, id, endpointBodyDefinition);
+                        default:
+                            Utils.ErrorExit($"Unknown endpoint method {endpointDefinition.Method} for endpoint {endpointDefinition.Name}");
+                            throw new UnreachableException();
+                    }
                 }
                 else if (endpointDefinition.Action.Type == EndpointActionType.Custom)
                 {
@@ -286,21 +398,6 @@ namespace StickyWebBackend
             };
 
             return handleRequest;
-        }
-
-        private void CreateGetEndpoint(WebApplication app, DynamicConfiguration dynamicConfiguration, EndpointDefinition endpointDefinition, string baseEndpointPath) 
-        {
-            app.MapGet(baseEndpointPath + "/{id}", GetHandleRequestFunction(dynamicConfiguration, endpointDefinition));
-        }
-        
-        private void CreatePostEndpoint(WebApplication app, DynamicConfiguration dynamicConfiguration, EndpointDefinition endpointDefinition, string baseEndpointPath)
-        {
-            app.MapPost(baseEndpointPath, GetHandleRequestFunction(dynamicConfiguration, endpointDefinition));
-        }
-
-        private void CreateDeleteEndpoint(WebApplication app, DynamicConfiguration dynamicConfiguration, EndpointDefinition endpointDefinition, string baseEndpointPath)
-        {
-            app.MapDelete(baseEndpointPath + "/{id}", GetHandleRequestFunction(dynamicConfiguration, endpointDefinition));  
         }
     }
 
