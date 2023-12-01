@@ -37,8 +37,15 @@ To run backend locally:
 - `dotnet restore` (just once)
 - `dotnet run --environment "Development"` 
 
+
+
 ## Database
 Download MongoDB Compass and use `mongodb://root:root@localhost:27017/?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&ssl=false` connection string to connect.  
+
+## Calling backend TO BE REMOVED
+- `GET http://localhost:4000/api/companies/648dd88df15a948fdbbdd001`  
+- `DELETE http://localhost:4000/api/companies/648dd88df15a948fdbbdd001`  
+- `POST http://localhost:4000/api/companies` (No working?)  
 
 ## TODO
 - File database

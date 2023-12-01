@@ -2,6 +2,9 @@ using MongoDB.Bson;
 using MongoDB.Driver;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson.Serialization.Serializers;
+using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
+using Newtonsoft.Json;
 
 namespace StickyWebBackend
 {
@@ -10,8 +13,8 @@ namespace StickyWebBackend
         public static async Task<OkObjectResult> GetAsync(
             EndpointDefaultActionDefinition actionDefinition, 
             Dictionary<string, Database> databases, 
-            string id, 
-            EndpointBodyDefinition endpointBodyDefinition
+            EndpointBodyDefinition? endpointBodyDefinition,
+            string id
         ) {
             // Find required database and collection
             Database database = databases[actionDefinition.DatabaseName];
@@ -22,8 +25,10 @@ namespace StickyWebBackend
             EndpointAnswer<BsonDocument> fetchResult = await DatabaseUtils.FetchItemFromCollection(collection, filter);
 
             // Convert result to endpoint body
-            Func<BsonDocument> dataConversion = () => { return fetchResult.Data.MapToEndpointBody(endpointBodyDefinition); };
-            EndpointAnswer<BsonDocument> endpointAnswer = fetchResult.ConvertToEndpointAnswer(dataConversion);
+            Func<BsonDocument?> dataConversion = () => { 
+                return endpointBodyDefinition == null ? fetchResult.Data : fetchResult.Data.MapToEndpointBody(endpointBodyDefinition);
+            };
+            EndpointAnswer<string?> endpointAnswer = fetchResult.ConvertToEndpointAnswer(dataConversion);
 
             // Return
             return new OkObjectResult(endpointAnswer);
@@ -32,14 +37,14 @@ namespace StickyWebBackend
         public static async Task<OkObjectResult> PostAsync(
             EndpointDefaultActionDefinition actionDefinition, 
             Dictionary<string, Database> databases, 
-            string id, 
-            EndpointBodyDefinition endpointBodyDefinition
+            EndpointBodyDefinition? endpointBodyDefinition,
+            string requestBody
         ) {
             // Find required database and collection
             Database database = databases[actionDefinition.DatabaseName];
             IMongoCollection<BsonDocument> collection = database.Collections[actionDefinition.DatabaseCollectionName]; 
 
-            BsonDocument addResult = await DatabaseUtils.AddItemToCollection<BsonDocument>(collection, new BsonDocument());
+            BsonDocument addResult = await DatabaseUtils.AddItemToCollection<BsonDocument>(collection, BsonDocument.Parse(requestBody));
 
             EndpointAnswer<BsonDocument> endpointAnswer = new EndpointAnswer<BsonDocument>(Status.Success, "", addResult);
 
@@ -50,8 +55,8 @@ namespace StickyWebBackend
         public static async Task<OkObjectResult> DeleteAsync(
             EndpointDefaultActionDefinition actionDefinition, 
             Dictionary<string, Database> databases, 
-            string id, 
-            EndpointBodyDefinition endpointBodyDefinition
+            EndpointBodyDefinition? endpointBodyDefinition,
+            string id
         ) {
             // Find required database and collection
             Database database = databases[actionDefinition.DatabaseName];
@@ -62,11 +67,11 @@ namespace StickyWebBackend
             // Return
             if (deleteResult) 
             {
-                return new OkObjectResult(new EndpointAnswer<bool>(Status.Success, ""));
+                return new OkObjectResult(new EndpointAnswer<string?>(Status.Success, ""));
             }
             else
             {
-                return new OkObjectResult(new EndpointAnswer<bool>(Status.Failure, $"Event with id {id} was not found"));  
+                return new OkObjectResult(new EndpointAnswer<string?>(Status.Failure, $"Event with id {id} was not found"));  
             }
         }
     }

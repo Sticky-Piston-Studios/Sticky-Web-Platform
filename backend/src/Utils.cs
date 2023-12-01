@@ -9,6 +9,7 @@ using System.Text.Json.Serialization;
 using System.Diagnostics;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Bson.IO;
+using Newtonsoft.Json.Linq;
 
 
 namespace StickyWebBackend
@@ -116,17 +117,29 @@ namespace StickyWebBackend
 
     public static class BsonDocumentExtensions
     {
-        public static BsonDocument MapToEndpointBody(this BsonDocument inputDocument, EndpointBodyDefinition endpointBodyDefinition)
+        public static BsonDocument? MapToEndpointBody(this BsonDocument inputDocument, EndpointBodyDefinition endpointBodyDefinition)
         {
-            var output = new BsonDocument();
+           // Clone the original BsonDocument to avoid modifying the original
+            // BsonDocument clonedDocument = inputDocument.Clone().AsBsonDocument;
 
-            foreach (FieldDefinition field in endpointBodyDefinition.Fields)
-            {   
-                bool success = inputDocument.TryGetValue(field.Name, out BsonValue fieldValue);
-                output.Add(field.Name, success ? fieldValue : BsonValue.Create(null));
-            }
+            // // Remove specified fields
+            // foreach (string fieldName in endpointBodyDefinition.Fields)
+            // {
+            //     clonedDocument.Remove(fieldName);
+            // }
 
-            return output;
+            // IMPORTANT: We cant remove just fiels by name because maybe nested fields will be removed!
+
+            // JObject? output = null;
+
+            // foreach (FieldDefinition field in endpointBodyDefinition.Fields)
+            // {   
+            //     bool success = inputDocument.TryGetValue(field.Name, out BsonValue fieldValue);
+            //     output.Add(field.Name, success ? fieldValue : null);
+            //     //output.Add(field.Name, success ? fieldValue : BsonValue.Create(null));
+            // }
+
+            return inputDocument;
         }
     }
  
@@ -153,23 +166,6 @@ namespace StickyWebBackend
                 {
                     return new EndpointAnswer<T>(Status.Failure, "Item for given search criteria not found");        
                 }
-
-                // var dotNetObj = BsonTypeMapper.MapToDotNetValue(item as BsonDocument);
-
-                // string xxx = JsonSerializer.Serialize(dotNetObj);
-
-                 var jsonDataContent= item.ToJson();
-                Console.WriteLine(Newtonsoft.Json.JsonConvert.DeserializeObject(jsonDataContent));
-
-
-                var jsonWriterSettings = new JsonWriterSettings 
-                { 
-                    OutputMode = JsonOutputMode.Shell,
-                }; 
-                Console.WriteLine("aaad" + item.ToJson(jsonWriterSettings));
-
-
-                Console.WriteLine("xxxxxxxxxxx " + item.ToJson());
 
                 return new EndpointAnswer<T>(Status.Success, "", item);
             }

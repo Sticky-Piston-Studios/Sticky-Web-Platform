@@ -1,5 +1,10 @@
 using System.Text.Json.Serialization;
 using System.ComponentModel.DataAnnotations;
+using MongoDB.Bson;
+using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
+using MongoDB.Bson.IO;
+using System.Text.RegularExpressions;
 
 namespace StickyWebBackend
 {
@@ -33,25 +38,21 @@ namespace StickyWebBackend
             Data = data;
         }
 
-        public EndpointAnswer<U> ConvertToEndpointAnswer<U>(Func<U>? dataConversion) 
+        public EndpointAnswer<string?> ConvertToEndpointAnswer<BsonDocument>(Func<BsonDocument?>? dataConversion) 
         {
-            if (Status == Status.Success) 
+            if (Status == Status.Success && dataConversion != null) 
             {
-                if (dataConversion != null) 
-                {
-                    return new EndpointAnswer<U>(Status, Message, dataConversion()); 
-                }
-                else
-                {
-                    if (typeof(T) == typeof(U))
-                    {
-                        throw new Exception($"Conversion of {typeof(T)} to {typeof(U)} is unncesessary");
-                    }
-                }
+                // Convert data to endpoint body
+                BsonDocument? data = dataConversion();
+
+                var jsonWriterSettings = new JsonWriterSettings { OutputMode = JsonOutputMode.Shell };
+                string? json = data?.ToJson(jsonWriterSettings);
+
+                return new EndpointAnswer<string?>(Status, Message, json); 
             }
 
             // Convert to EndpointAnswer with empty data
-            return new EndpointAnswer<U>(Status, Message);
+            return new EndpointAnswer<string?>(Status, Message);
         }
     }
 }

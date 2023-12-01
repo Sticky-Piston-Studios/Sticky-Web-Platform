@@ -40,7 +40,6 @@
         {
           "Name": "DeleteCompany",
           "Method": "DELETE",
-          "BodyName": "DeleteCompany",
           "Action": {
             "Type": "Default",
             "DatabaseName": "Main",
