@@ -266,7 +266,6 @@ namespace StickyWebBackend
 
          private void CreateGetEndpoint(WebApplication app, DynamicConfiguration dynamicConfiguration, EndpointDefinition endpointDefinition, string baseEndpointPath) 
         {
-            Console.WriteLine($"Creating GET endpoint: {endpointDefinition.Name}");
             if (endpointDefinition.Subroute != null)
             {
                 app.MapGet($"{baseEndpointPath}/{endpointDefinition.Subroute}", GetHandleRequestFunction(dynamicConfiguration, endpointDefinition));
@@ -322,12 +321,10 @@ namespace StickyWebBackend
                     {
                         case "GET":
                         {
-                            Console.WriteLine("Called GET");
                             string? id = context.Request.RouteValues["id"] as string;
                             // TODO: not sure if this is the best way to do this
                             if (string.IsNullOrEmpty(id)) 
                             {
-                                Console.WriteLine("GET ALL");
                                 return await DefaultActions.GetAsyncAll(endpointDefaultActionDefinition, databases, endpointBodyDefinition);
                             } else 
                             {   

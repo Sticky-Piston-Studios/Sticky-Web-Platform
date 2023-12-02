@@ -3,7 +3,7 @@ import styles from "../styles/Company.module.css";
 
 function CompanyComponent() {
   const [companies, setCompanies] = useState([]);
-  const [newCompany, setNewCompany] = useState({ Name: "", Value: "" });
+  const [newCompany, setNewCompany] = useState({ Name: "", EmployeeCount: "" });
 
   const fetchCompanies = () => {
     // Call the "GetCompanies" endpoint
@@ -43,21 +43,54 @@ function CompanyComponent() {
       });
   };
 
+  const deleteCompany = (id) => {
+    // Call the "DeleteCompany" endpoint
+    console.log("Deleting company with id: ", id);
+    fetch(`/api/companies/${id}`, {
+      method: "DELETE",
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Company deleted", data);
+        setCompanies(companies.filter((company) => company._id !== id));
+      })
+      .catch((error) => {
+        console.error("Error deleting company", error);
+      });
+  };
+
   return (
     <div className={styles.container}>
       <main className={styles.main}>
         <h1 className={styles.title}>Companies</h1>
         {companies.length > 0 ? (
-          <ul>
-            {companies.map((company, index) => (
-              <li key={index}>
-                <p className={styles.description}>Name: {company.Name}</p>
-                <p className={styles.description}>
-                  EmployeeCount: {company.EmployeeCount}
-                </p>
-              </li>
-            ))}
-          </ul>
+          <div className={styles.tableContainer}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>EmployeeCount</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {companies.map((company, index) => (
+                  <tr key={index}>
+                    <td>{company.Name}</td>
+                    <td>{company.EmployeeCount}</td>
+                    <td>
+                      <button
+                        className={styles.deleteButton}
+                        onClick={() => deleteCompany(company._id)}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : (
           <p className={styles.description}>Loading...</p>
         )}
@@ -79,7 +112,7 @@ function CompanyComponent() {
             onChange={(e) =>
               setNewCompany({ ...newCompany, EmployeeCount: e.target.value })
             }
-            placeholder="Company EmployeeCount"
+            placeholder="Company employeeCount"
             required
           />
           <button type="submit" className={styles.card}>

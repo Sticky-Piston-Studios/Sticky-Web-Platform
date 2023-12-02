@@ -66,3 +66,34 @@
 .input:focus {
   border-color: #0070f3;
 }
+
+.tableContainer {
+  margin-top: 2rem;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  text-align: left;
+  color: #333;
+}
+
+.deleteButton {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 5px;
+  background-color: #f44336;
+  color: #fff;
+  cursor: pointer;
+}
+
+.deleteButton:hover {
+  background-color: #d32f2f;
+}

@@ -1,7 +1,10 @@
-// pages/api/companies/[endpoint].js
 import fetch from "node-fetch";
-import { API_URL } from "src/constants";
 import fs from "fs";
+
+// Parse the configuration file
+export const config = JSON.parse(
+  fs.readFileSync("../configuration.json", "utf8")
+);
 
 function bsonToJson(data) {
   return data.map((item) => {
@@ -13,10 +16,22 @@ function bsonToJson(data) {
   });
 }
 
-// Parse the configuration file
-const config = JSON.parse(fs.readFileSync("../configuration.json", "utf8"));
+export function findEndpointConfig(path, method, subroute) {
+  // Find the endpoint group
+  console.log("path: ", path, "method: ", method, "subroute: ", subroute);
+  const endpointGroup = config.EndpointGroups.find(
+    (group) => group.Path === path
+  );
 
-async function callEndpoint(url, req, endpointBody) {
+  // Find the endpoint configuration
+  const endpointConfig = endpointGroup.Endpoints.find(
+    (e) => e.Method === method && e.Subroute === subroute
+  );
+
+  return endpointConfig;
+}
+
+export async function callEndpoint(url, req, endpointBody) {
   // Determine the body to send based on the request method
   let body = null;
   if (req.method === "POST" || req.method === "PATCH") {
@@ -68,52 +83,12 @@ async function callEndpoint(url, req, endpointBody) {
   // Get the data from the external API response
   const data = await response.json();
 
-  // Convert the data to BSON HACK!
-  data.value.data = bsonToJson(data.value.data);
+  // Convert the data to BSON HACK! (extract the data)
+  if (data.value && data.value.data)
+    data.value.data = bsonToJson(data.value.data);
 
   return {
     status: response.status,
     body: data,
   };
-}
-
-// TODO: this currently supports one level of nesting, we can create more levels adjusting the /api/<multiple_levels/>/concreteendpoint.js
-export default async function handler(req, res) {
-  try {
-    // Construct the path from the subroute
-    const path = `/api/${req.query.endpoint}`;
-
-    // Find the endpoint group
-    const endpointGroup = config.EndpointGroups.find(
-      (group) => group.Path === path
-    );
-    console.log(endpointGroup);
-
-    // Find the endpoint configuration
-    const endpointConfig = endpointGroup.Endpoints.find(
-      (e) => e.Method === req.method && e.Subroute === req.query.subroute
-    );
-    console.log(endpointConfig);
-
-    if (!endpointConfig) {
-      res.status(404).json({ error: "Endpoint not found" });
-      return;
-    }
-
-    const url = `${API_URL}${path}`;
-
-    // Find the endpoint body
-    const endpointBody = config.EndpointBodies.find(
-      (e) => e.Name === endpointConfig.Name
-    );
-    console.log("endpoint body: ", endpointBody);
-
-    const result = await callEndpoint(url, req, endpointBody);
-
-    // Send the result back as a response
-    res.status(result.status).json(result.body);
-  } catch (error) {
-    // Handle any errors
-    res.status(500).json({ error: "Error forwarding the request" });
-  }
 }
