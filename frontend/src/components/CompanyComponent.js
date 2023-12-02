@@ -10,7 +10,8 @@ function CompanyComponent() {
     fetch("/api/companies/") // for now it gets ALL
       .then((response) => response.json())
       .then((data) => {
-        setCompanies(data);
+        console.log("Got companies: ", data);
+        setCompanies(data.value.data);
       })
       .catch((error) => {
         console.error("Error fetching companies", error);
@@ -51,7 +52,9 @@ function CompanyComponent() {
             {companies.map((company, index) => (
               <li key={index}>
                 <p className={styles.description}>Name: {company.Name}</p>
-                <p className={styles.description}>Value: {company.Value}</p>
+                <p className={styles.description}>
+                  EmployeeCount: {company.EmployeeCount}
+                </p>
               </li>
             ))}
           </ul>
@@ -72,11 +75,11 @@ function CompanyComponent() {
           <input
             type="number"
             className={styles.input}
-            value={newCompany.Value}
+            value={newCompany.EmployeeCount}
             onChange={(e) =>
-              setNewCompany({ ...newCompany, Value: e.target.value })
+              setNewCompany({ ...newCompany, EmployeeCount: e.target.value })
             }
-            placeholder="Company Value"
+            placeholder="Company EmployeeCount"
             required
           />
           <button type="submit" className={styles.card}>

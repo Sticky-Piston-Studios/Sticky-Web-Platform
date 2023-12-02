@@ -98,6 +98,10 @@
         {
           "Name": "Value",
           "Type": "Int"
+        },
+        {
+          "Name": "EmployeeCount",
+          "Type": "Int"
         }
       ]
     },
@@ -110,6 +114,10 @@
         },
         {
           "Name": "Value",
+          "Type": "Int"
+        },
+        {
+          "Name": "EmployeeCount",
           "Type": "Int"
         }
       ]

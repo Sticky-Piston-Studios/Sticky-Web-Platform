@@ -3,26 +3,13 @@ import fetch from "node-fetch";
 import { API_URL } from "src/constants";
 import fs from "fs";
 
-function jsonFromBson(data) {
+function bsonToJson(data) {
   return data.map((item) => {
     // Replace ObjectId parts with just the id string
     const itemReplaced = item.replace(/ObjectId\("([^"]+)"\)/g, '"$1"');
     // Parse the string into an object
     const itemParsed = JSON.parse(itemReplaced);
     return itemParsed;
-  });
-}
-
-function jsonToBson(data) {
-  return data.map((item) => {
-    // Convert the object into a string
-    const itemStringified = JSON.stringify(item);
-    // Replace the id string parts with ObjectId
-    const itemReplaced = itemStringified.replace(
-      /"([^"]+)"/g,
-      'ObjectId("$1")'
-    );
-    return itemReplaced;
   });
 }
 
@@ -63,7 +50,6 @@ export default async function handler(req, res) {
 
     // Determine the body to send based on the request method
     let body = null;
-    console.log("body mm");
     if (req.method === "POST" || req.method === "PATCH") {
       // check if all required fields are present
       // read them from the dynamicCofiguration from the EndpointBodies with given endpoint name
@@ -85,7 +71,6 @@ export default async function handler(req, res) {
         });
         return;
       }
-      console.log("no missing fields");
       // check if there are any additional fields in the request body
       const additionalFields = Object.keys(req.body).filter(
         (field) =>
@@ -117,7 +102,11 @@ export default async function handler(req, res) {
 
     // Get the data from the external API response
     const data = await response.json();
-    console.log("Got the dta  ", data);
+
+    // Convert the data to BSON HACK!
+    data.value.data = bsonToJson(data.value.data);
+
+    console.log("converted the data to bson: ", data);
 
     // Send the data back as a response
     res.status(response.status).json(data);
