@@ -3,8 +3,32 @@ import fetch from "node-fetch";
 import { API_URL } from "src/constants";
 import fs from "fs";
 
+function jsonFromBson(data) {
+  return data.map((item) => {
+    // Replace ObjectId parts with just the id string
+    const itemReplaced = item.replace(/ObjectId\("([^"]+)"\)/g, '"$1"');
+    // Parse the string into an object
+    const itemParsed = JSON.parse(itemReplaced);
+    return itemParsed;
+  });
+}
+
+function jsonToBson(data) {
+  return data.map((item) => {
+    // Convert the object into a string
+    const itemStringified = JSON.stringify(item);
+    // Replace the id string parts with ObjectId
+    const itemReplaced = itemStringified.replace(
+      /"([^"]+)"/g,
+      'ObjectId("$1")'
+    );
+    return itemReplaced;
+  });
+}
+
 export default async function handler(req, res) {
   try {
+    console.log("req.query: ", req.query);
     // Parse the configuration file
     const config = JSON.parse(fs.readFileSync("../configuration.json", "utf8"));
 
@@ -80,6 +104,8 @@ export default async function handler(req, res) {
 
     console.log("All fine, can post the body: ", body);
     console.log("url: ", url);
+
+    // workaround for json to bson conversion
     const response = await fetch(url, {
       method: req.method,
       headers: {
