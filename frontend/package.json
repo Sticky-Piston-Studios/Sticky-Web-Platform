@@ -3,9 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "generate:api": "node scripts/generate-api-routes.js",
+    "dev": "npm run generate:api && next dev",
+    "build": "npm run generate:api && next build",
+    "start": "npm run generate:api && next start",
     "lint": "next lint"
   },
   "dependencies": {
