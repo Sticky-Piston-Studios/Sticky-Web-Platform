@@ -7,7 +7,7 @@
         {
           "Name": "Companies",
           "Model": "Company",
-          "InitialData": "./Database/InitialData/Companies.js"
+          "InitialData": "./database/InitialData/Companies.js"
         }
       ]
     }
@@ -53,7 +53,7 @@
     {
       "Name": "Company",
       "Fields": [
-        { 
+        {
           "Name": "Id",
           "Type": "Id"
         },
@@ -61,7 +61,7 @@
           "Name": "Name",
           "Type": "String"
         },
-        { 
+        {
           "Name": "RestaurantIds",
           "Type": "List<Id>"
         },

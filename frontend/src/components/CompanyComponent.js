@@ -7,7 +7,7 @@ function CompanyComponent() {
 
   const fetchCompanies = () => {
     // Call the "GetCompanies" endpoint
-    fetch("/api/companies/GetCompanies")
+    fetch("/api/companies/GetCompany")
       .then((response) => response.json())
       .then((data) => {
         setCompanies(data);

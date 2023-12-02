@@ -313,7 +313,8 @@ namespace StickyWebBackend
                     {
                         case "GET":
                         {
-                            string? id = context.Request.RouteValues["id"] as string;
+                            string? id = context.Request.RouteValues["id"] as string; // TODO: here add a new method without id
+                            // add GetAsyncAll method
                             return await DefaultActions.GetAsync(endpointDefaultActionDefinition, databases, endpointBodyDefinition, id);
                         }
                         case "POST":
