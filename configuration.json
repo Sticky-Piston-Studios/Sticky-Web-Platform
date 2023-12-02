@@ -20,6 +20,17 @@
         {
           "Name": "GetCompany",
           "Method": "GET",
+          "Subroute": "id",
+          "BodyName": "GetCompany",
+          "Action": {
+            "Type": "Default",
+            "DatabaseName": "Main",
+            "DatabaseCollectionName": "Companies"
+          }
+        },
+        {
+          "Name": "GetCompanies",
+          "Method": "GET",
           "BodyName": "GetCompany",
           "Action": {
             "Type": "Default",

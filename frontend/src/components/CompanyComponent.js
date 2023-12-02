@@ -7,7 +7,7 @@ function CompanyComponent() {
 
   const fetchCompanies = () => {
     // Call the "GetCompanies" endpoint
-    fetch("/api/companies/GetCompany")
+    fetch("/api/companies/") // for now it gets ALL
       .then((response) => response.json())
       .then((data) => {
         setCompanies(data);
@@ -25,7 +25,7 @@ function CompanyComponent() {
     event.preventDefault();
 
     // Call the "AddCompany" endpoint
-    fetch("/api/companies/AddCompany", {
+    fetch("/api/companies/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

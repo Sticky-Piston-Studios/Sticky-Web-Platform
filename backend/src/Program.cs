@@ -266,7 +266,15 @@ namespace StickyWebBackend
 
          private void CreateGetEndpoint(WebApplication app, DynamicConfiguration dynamicConfiguration, EndpointDefinition endpointDefinition, string baseEndpointPath) 
         {
-            app.MapGet(baseEndpointPath + "/{id}", GetHandleRequestFunction(dynamicConfiguration, endpointDefinition));
+            Console.WriteLine($"Creating GET endpoint: {endpointDefinition.Name}");
+            if (endpointDefinition.Subroute != null)
+            {
+                app.MapGet($"{baseEndpointPath}/{endpointDefinition.Subroute}", GetHandleRequestFunction(dynamicConfiguration, endpointDefinition));
+            }
+            else
+            {
+                app.MapGet(baseEndpointPath, GetHandleRequestFunction(dynamicConfiguration, endpointDefinition));
+            }
         }
 
         private void CreatePostEndpoint(WebApplication app, DynamicConfiguration dynamicConfiguration, EndpointDefinition endpointDefinition, string baseEndpointPath)
@@ -299,6 +307,7 @@ namespace StickyWebBackend
                         Utils.ErrorExit($"No endpoint body name detected for endpoint {endpointDefinition.Name} in the dynamic configuration!");
                     }
                 }
+                Console.WriteLine("Called GetHandleRequestFunction");
 
                 // Perform action
                 if (endpointDefinition.Action.Type == EndpointActionType.Default) 
@@ -313,9 +322,17 @@ namespace StickyWebBackend
                     {
                         case "GET":
                         {
-                            string? id = context.Request.RouteValues["id"] as string; // TODO: here add a new method without id
-                            // add GetAsyncAll method
-                            return await DefaultActions.GetAsync(endpointDefaultActionDefinition, databases, endpointBodyDefinition, id);
+                            Console.WriteLine("Called GET");
+                            string? id = context.Request.RouteValues["id"] as string;
+                            // TODO: not sure if this is the best way to do this
+                            if (string.IsNullOrEmpty(id)) 
+                            {
+                                Console.WriteLine("GET ALL");
+                                return await DefaultActions.GetAsyncAll(endpointDefaultActionDefinition, databases, endpointBodyDefinition);
+                            } else 
+                            {   
+                                return await DefaultActions.GetAsync(endpointDefaultActionDefinition, databases, endpointBodyDefinition, id);
+                            }
                         }
                         case "POST":
                         {

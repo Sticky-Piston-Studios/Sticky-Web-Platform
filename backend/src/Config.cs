@@ -118,6 +118,8 @@ namespace StickyWebBackend
     {
         public required string Name { get; set; }
         public required string Method { get; set; }
+        public string? Subroute { get; set; }
+
         public string? BodyName { get; set; }
 
         [JsonConverter(typeof(EndpointActionDefinitionConverter))]

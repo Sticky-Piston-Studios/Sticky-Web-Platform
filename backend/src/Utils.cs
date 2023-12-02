@@ -175,15 +175,23 @@ namespace StickyWebBackend
             }
         }
 
-        public static async Task<(List<T> items, int totalItemCount)> FetchItemsFromCollection<T>(IMongoCollection<T> collection, IDataFilter<T> dataFilter, DataSorter dataSorter, PaginationFilter paginationFilter)
+        public static async Task<(List<T> items, int totalItemCount)> FetchItemsFromCollection<T>(IMongoCollection<T> collection, FilterDefinition<T>? filter, DataSorter? dataSorter = null, PaginationFilter? paginationFilter = null)
         {
-            var filter = dataFilter.GetFilter();
-            var findOptions = new FindOptions<T>
+            var findOptions = new FindOptions<T>();
+
+            if (dataSorter != null)
             {
-                Sort = dataSorter.Ascending ? Builders<T>.Sort.Ascending(dataSorter.SortProperty) : Builders<T>.Sort.Descending(dataSorter.SortProperty),
-                Skip = (paginationFilter.PageNumber - 1) * paginationFilter.PageSize,
-                Limit = paginationFilter.PageSize,
-            };
+                findOptions.Sort = dataSorter.Ascending ? Builders<T>.Sort.Ascending(dataSorter.SortProperty) : Builders<T>.Sort.Descending(dataSorter.SortProperty);
+            }
+
+            if (paginationFilter != null)
+            {
+                findOptions.Skip = (paginationFilter.PageNumber - 1) * paginationFilter.PageSize;
+                findOptions.Limit = paginationFilter.PageSize;
+            }
+
+            // Use an empty filter if filter is null
+            filter ??= Builders<T>.Filter.Empty;
 
             var filteredItemsCursor = await collection.FindAsync(filter, findOptions);
             var filteredItems = await filteredItemsCursor.ToListAsync();

@@ -34,6 +34,30 @@ namespace StickyWebBackend
             return new OkObjectResult(endpointAnswer);
         }
 
+        public static async Task<OkObjectResult> GetAsyncAll(
+            EndpointDefaultActionDefinition actionDefinition, 
+            Dictionary<string, Database> databases, 
+            EndpointBodyDefinition? endpointBodyDefinition
+        ) {
+            // Find required database and collection
+            Database database = databases[actionDefinition.DatabaseName];
+            IMongoCollection<BsonDocument> collection = database.Collections[actionDefinition.DatabaseCollectionName]; 
+
+            // Fetch items from database
+            FilterDefinition<BsonDocument> dataFilter = Builders<BsonDocument>.Filter.Empty;
+
+            (List<BsonDocument> fetchResults, int totalItemCount) = await DatabaseUtils.FetchItemsFromCollection(collection, dataFilter);
+
+            // Convert results to endpoint bodies
+            Func<List<BsonDocument>?> dataConversionList = () => { 
+                return fetchResults.Select(fetchResult => endpointBodyDefinition == null ? fetchResult : fetchResult.MapToEndpointBody(endpointBodyDefinition)).ToList();
+            };
+            EndpointAnswer<List<string?>> endpointAnswer = new EndpointAnswer<List<string?>>(Status.Success, null).ConvertToEndpointAnswerList(dataConversionList);
+
+            // Return
+            return new OkObjectResult(endpointAnswer);
+        }
+
         public static async Task<OkObjectResult> PostAsync(
             EndpointDefaultActionDefinition actionDefinition, 
             Dictionary<string, Database> databases, 

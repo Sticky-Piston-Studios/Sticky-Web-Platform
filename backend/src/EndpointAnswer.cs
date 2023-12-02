@@ -54,6 +54,23 @@ namespace StickyWebBackend
             // Convert to EndpointAnswer with empty data
             return new EndpointAnswer<string?>(Status, Message);
         }
+
+        public EndpointAnswer<List<string?>> ConvertToEndpointAnswerList(Func<List<BsonDocument>?>? dataConversionList)
+        {
+            if (Status == Status.Success && dataConversionList != null)
+            {
+                // Convert data to endpoint body
+                List<BsonDocument>? dataList = dataConversionList();
+
+                var jsonWriterSettings = new JsonWriterSettings { OutputMode = JsonOutputMode.Shell };
+                List<string?> jsonList = dataList?.Select(data => data?.ToJson(jsonWriterSettings)).ToList();
+
+                return new EndpointAnswer<List<string?>>(Status, Message, jsonList);
+            }
+
+            // Convert to EndpointAnswer with empty data
+            return new EndpointAnswer<List<string?>>(Status, Message);
+        }
     }
 }
 
