@@ -33,10 +33,9 @@ export default async function handler(req, res) {
     const config = JSON.parse(fs.readFileSync("../configuration.json", "utf8"));
 
     // Construct the path from the subroute
-    const path = `/api/${req.query.subroute}`;
+    const path = `/api/${req.query.endpoint}`;
 
     // Find the endpoint group
-    console.log("BOBOB: ", API_URL);
     const endpointGroup = config.EndpointGroups.find(
       (group) => group.Path === path
     );
@@ -44,7 +43,7 @@ export default async function handler(req, res) {
 
     // Find the endpoint configuration
     const endpointConfig = endpointGroup.Endpoints.find(
-      (e) => e.Name === req.query.endpoint
+      (e) => e.Method === req.method && e.Subroute === req.query.subroute
     );
     console.log(endpointConfig);
 
@@ -59,7 +58,8 @@ export default async function handler(req, res) {
     //const url = queryString
     //  ? `${API_URL}${endpointGroup.Path}/?${queryString}`
     //  : `${API_URL}${endpointGroup.Path}`;
-    const url = `${API_URL}${endpointGroup.Path}/${req.query.endpoint}`;
+    const url = `${API_URL}${path}`;
+    console.log("url: ", url);
 
     // Determine the body to send based on the request method
     let body = null;
@@ -68,7 +68,7 @@ export default async function handler(req, res) {
       // check if all required fields are present
       // read them from the dynamicCofiguration from the EndpointBodies with given endpoint name
       const endpointBody = config.EndpointBodies.find(
-        (e) => e.Name === req.query.endpoint
+        (e) => e.Name === endpointConfig.Name
       );
       console.log("endpoint body: ", endpointBody);
       // check if all fields in the config are present in the request body, also check that no additional fields are present
