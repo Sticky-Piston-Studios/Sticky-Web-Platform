@@ -8,7 +8,7 @@ const config = JSON.parse(fs.readFileSync("../configuration.json", "utf8"));
 const apiDir = path.resolve(__dirname, "../src/pages/api");
 
 // Template for endpoints without parameters
-const templateWithoutParams = (path) => `
+const templateWithoutParams = (path, queryParameters) => `
 import { API_URL } from "src/constants";
 import { callEndpoint, findEndpointConfig, config } from "src/utils.js";
 
@@ -25,6 +25,16 @@ export default async function handler(req, res) {
 
     const url = \`\${API_URL}\${endpointPath}\`;
 
+    ${queryParameters
+      .map(
+        (qParam) => `
+    if (req.query.${qParam}) {
+      url += \`?${qParam}=\${req.query.${qParam}}\`;
+    }
+        `
+      )
+      .join("")}
+
     const endpointBody = config.EndpointBodies.find(
       (e) => e.Name === endpointConfig.Name
     );
@@ -39,7 +49,7 @@ export default async function handler(req, res) {
 `;
 
 // Template for endpoints with parameters
-const templateWithParams = (path) => `
+const templateWithParams = (path, queryParameters) => `
 import { API_URL } from "src/constants";
 import { callEndpoint, findEndpointConfig, config } from "src/utils.js";
 
@@ -55,6 +65,16 @@ export default async function handler(req, res) {
     }
 
     const url = \`\${API_URL}\${endpointPath}/\${req.query.endpoint}\`;
+
+    ${queryParameters
+      .map(
+        (qParam) =>
+          `
+    if (req.query.${qParam}) {
+      url += \`?${qParam}=\${req.query.${qParam}}\`;
+    }`
+      )
+      .join("")}
 
     const endpointBody = config.EndpointBodies.find(
       (e) => e.Name === endpointConfig.Name
@@ -78,15 +98,20 @@ config.EndpointGroups.forEach((group) => {
     fs.mkdirSync(groupDir, { recursive: true });
   }
 
+  // Collect all query parameters for each route, filtering out any undefined values
+  const queryParameters = group.Endpoints.flatMap(
+    (endpoint) => endpoint.QueryParameters || []
+  ).filter(Boolean);
+
   // Create index.js for endpoints without parameters
   fs.writeFileSync(
     path.join(groupDir, "index.js"),
-    templateWithoutParams(group.Path)
+    templateWithoutParams(group.Path, queryParameters)
   );
 
   // Create [endpoint].js for endpoints with parameters
   fs.writeFileSync(
     path.join(groupDir, "[endpoint].js"),
-    templateWithParams(group.Path)
+    templateWithParams(group.Path, queryParameters)
   );
 });
