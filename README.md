@@ -1,15 +1,26 @@
 # Sticky Web Framework (SWF)
 
-## Overview
+-- nice logo! --
 
 The Sticky Web Framework (SWF), developed by Sticky Piston Studios, is an innovative open-source framework designed to streamline the development of web applications. This framework uniquely enables the dynamic creation of endpoints through a single configuration file, which is utilized by both the frontend and backend components of an application.
 
 **Key Features:**
 
-- Dynamic Endpoint Configuration: SWF allows for the dynamic definition of endpoints, databases, models, and request & response bodies through a simple JSON configuration file. This file serves as the central point of reference for both frontend and backend, significantly reducing the need for code modifications.
-- No-Code Backend and Frontend Integration: The framework offers a no-code, dynamically-configurable backend and a corresponding frontend. This integration is particularly beneficial for users with minimal or no programming experience, as it simplifies the process of web app creation.
-- Extensible and Flexible Architecture: Despite its no-code approach, SWF is designed to be extensible, catering to more complex and customized application needs. Its generic architecture ensures flexibility and adaptability across various use cases.
-- Frontend Utility Functions: A set of utility functions is provided for the frontend, facilitating seamless communication with the backend. These functions are aware of the definitions set in the configuration file, ensuring consistency and ease of use.
+- **Dynamic Endpoint Configuration:**
+
+  SWF allows for the dynamic definition of endpoints, databases, models, and request & response bodies through a simple JSON configuration file. This file serves as the central point of reference for both frontend and backend, significantly reducing the need for code modifications.
+
+- **No-Code Backend and Frontend Integration:**
+
+  The framework offers a no-code, dynamically-configurable backend and a corresponding frontend. This integration is particularly beneficial for users with minimal or no programming experience, as it simplifies the process of web app creation.
+
+- **Extensible and Flexible Architecture:**
+
+  Despite its no-code approach, SWF is designed to be extensible, catering to more complex and customized application needs. Its generic architecture ensures flexibility and adaptability across various use cases.
+
+- **Frontend Utility Functions:**
+
+  A set of utility functions is provided for the frontend, facilitating seamless communication with the backend. These functions are aware of the definitions set in the configuration file, ensuring consistency and ease of use.
 
 ## Usage
 
@@ -17,29 +28,32 @@ The core of SWF's functionality lies in its configuration file. Users define the
 
 **Target Audience:**
 
-- SWF is ideal for individuals and teams looking to develop web applications without delving deeply into coding. It's particularly useful for:
+SWF is ideal for individuals and teams looking to develop web applications without delving deeply into coding. It's particularly useful for:
+
 - Developers seeking a quick and efficient way to set up both frontend and backend components.
 - Non-technical users who need to create web applications without extensive programming knowledge.
 - Teams aiming to reduce development time and focus on application design and user experience.
 
 ## Contributing
 
-We welcome contributions to the Sticky Web Framework! Whether it's feature enhancements, bug fixes, or documentation improvements, your input is valuable. Please refer to our contributing guidelines for more information on how to participate in the development of SWF.
+**We welcome contributions to the Sticky Web Framework!** Whether it's feature enhancements, bug fixes, or documentation improvements, your input is valuable. Please refer to our contributing guidelines for more information on how to participate in the development of SWF.
 
 ## Table of Contents
 
-- Development
-  - DB
-  - Backend
-  - Frontend
-- How does it work?
-- User Guide
+- [Development](#development)
+  - [Backend](#backend)
+  - [Frontend](#frontend)
+  - [Database](#database)
+- [How does it work?](#how-does-it-work)
+- [User Guide](#user-guide)
 
 ---
 
 ## Development
 
-### Using Sticky Web Framework Manager
+To quickly get started with the SWF, please clone the repository and set it up using **Sticky Web Framework Manager**:
+
+### Sticky Web Framework Manager
 
 Install prerequisites: `npm install yargs mongodb`
 
@@ -63,10 +77,7 @@ To run all containers manually:
 - `cd <PROJECT_FOLDER>`
 - `docker compose -f "docker-compose.yaml" up database backend frontend nginx -d --build`
 
-To run frontend locally (for hot reloading support):
-
-- `cd <PROJECT_FOLDER>/frontend`
-- `npm run dev`
+### Backend
 
 To run backend locally:
 
@@ -74,15 +85,172 @@ To run backend locally:
 - `dotnet restore` (just once)
 - `dotnet run --environment "Development"`
 
-## Database
+### Frontend
+
+To run frontend locally (for hot reloading support), first you have generate the dynamic endpoints (this step has to be done just once):
+
+- `cd <PROJECT_FOLDER>/frontend`
+- `npm run generate:api`
+
+Then, run the application:
+
+- `npm run dev`
+
+### Database
 
 Download MongoDB Compass and use `mongodb://root:root@localhost:27017/?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&ssl=false` connection string to connect.
 
-## Calling backend TO BE REMOVED
+## User Guide
 
-- `GET http://localhost:4000/api/companies/648dd88df15a948fdbbdd001`
-- `DELETE http://localhost:4000/api/companies/648dd88df15a948fdbbdd001`
-- `POST http://localhost:4000/api/companies` (No working?)
+Since most users will be content with using the framework as it is, in this section we describe how to create a proper endpoint, model and database configuration that will then be used by backend, frontend and the database. If you are concerned about the exact details of how SWF operates and want to dig deeper into its internals, please refer to [the next section](#how-does-it-work).
+
+### `configuration.json` Usage
+
+This file defines the entirety of both frontend-backend and backend to database communication. It also defines how the data should be stored. Changing fields in this file will be reflected in all 3 components the application built on top using SWF.
+
+Let's walk through an exemplary configuration for this repository in parts, discussing relevant details.
+
+First part is mostly concerned with setting up the database(s) and proper collections.
+
+```JSON
+{
+  "DatabaseConnectionString": "mongodb://root:root@swf-database:27017",
+  "Databases": [
+    {
+      "Name": "Main",
+      "Collections": [
+        {
+          "Name": "Companies",
+          "Model": "Company",
+          "InitialData": "./database/InitialData/Companies.js"
+        }
+      ]
+    }
+  ],
+```
+
+Parameters:
+
+- `DatabaseConnectionString` - the connection string used to connect to your database
+- `Databases` - list of databases we connect to
+  - `Name` - database name -`Collections` - list of collections we have in the database
+    - `Name` - name of the collection
+    - `Model` - which model to use for this collection, the value must match **exactly** with one in `DatabaseModels`
+    - `InitialData` - initial data to be supplied to this collection, done by the `StickyWebFrameworkManager.js`
+
+Then, the backend and frontend endpoints are defined, in groups for easier logical classification:
+
+```JSON
+  "EndpointGroups": [
+    "Name": "Companies",
+    "Path": "/api/companies",
+    "Endpoints": [
+      {
+        "Name": "GetCompany",
+        "Method": "GET",
+        "Subroute": "id",
+        "BodyName": "GetCompany",
+        "Action": {
+          "Type": "Default",
+          "DatabaseName": "Main",
+          "DatabaseCollectionName": "Companies"
+        }
+      },
+      ...
+    ]
+  ],
+```
+
+Parameters:
+
+- `EndpointGroups` - list of endpoint groups that will share a common `Path`
+  - `Name` - name of the endpoint group
+  - `Path` - sub-path of the endpoint that will be prepended to the actual path of the endpoint. If it does not have any `Parameters`, or `Subroute`s then the endpoint ending with `Path` will be called with appropriate `Method`
+    - `Endpoints` - list of endpoints to be called
+      - `Name` - unique name for this `Method` + `Subroute` + `Parameters` combination
+      - `Method` - the HTTP method to be used when calling this endpoint. Allowed methods are: `GET`, `POST`, `DELETE` (for now)
+      - `Subroute` - optional, is mostly a marker that this route accepts further parameters
+      - `BodyName` - optional, used only when body is necessary. Must match one `Name` in `EndpointBodies`.
+      - `Action` - container for fields describing the `Action` that the backend should take when receiving this call
+        - `Type` - specifies what action should be taken (`Default` or `Custom`) - refer to [User Guide](#user-guide) for more information
+        - `DatabaseName` - which database to use
+        - `DatabaseCollectionName` - which database collection to use
+
+Next, the actual models of the data in the database must be supplied:
+
+```JSON
+  "DatabaseModels": [
+    {
+      "Name": "Company",
+      "Fields": [
+        {
+          "Name": "Id",
+          "Type": "Id"
+        },
+        {
+          "Name": "Name",
+          "Type": "String"
+        },
+        {
+          "Name": "RestaurantIds",
+          "Type": "List<Id>"
+        },
+        {
+          "Name": "Value",
+          "Type": "Int"
+        }
+      ]
+    }
+  ],
+```
+
+Parameters:
+
+- `DatabaseModels` - list of data models to for storing the data in the database
+  - `Name` - name of this database model
+  - `Fields` - list of name:type fields present the database
+    - `Name` - name of the field
+    - `Type` - type of the field, allowed types: `Id`, `String`, `List<>`, `Int`
+
+Lastly, we need to define what data will be sent over the endpoint to backend:
+
+```JSON
+  "EndpointBodies": [
+    {
+      "Name": "GetCompany",
+      "Fields": [
+        {
+          "Name": "Name",
+          "Type": "String"
+        },
+        {
+          "Name": "RestaurantIds",
+          "Type": "List<Id>"
+        },
+        {
+          "Name": "Value",
+          "Type": "Int"
+        },
+        {
+          "Name": "EmployeeCount",
+          "Type": "Int"
+        }
+      ]
+    },
+    ...
+  ]
+}
+```
+
+Parameters:
+
+- `EndpointBodies` - list of bodies to send when endpoint with a `Name` is called
+  - `Name` - name of the endpoint, must match the `Name` in `Endpoints`
+  - `Fields` - list of name:type fields to send to the backend
+    - `Name` - name of the field
+    - `Type` - type of the field, allowed types: `Id`, `String`, `List<>`, `Int`
+
+## How does it work?
 
 ## TODO
 
