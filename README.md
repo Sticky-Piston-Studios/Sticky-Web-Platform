@@ -268,6 +268,7 @@ This is ilustrated by this diagram:
 Frontend handles configuration parsing and reading differently because we make usage of **Next.js** dynamic route handling and creation. This is further facilitated by running a script: `generate-api-routes.js` before compiling the project that parses the `configuration.json` and extracts relevant subroutes, creating proper routing structure for the frontend. After the route directory structures are created, the last parts of the routes responsible for last-mile dispatching of endpoints are generated from templates that take into account `QueryParameters` and `Subroute`s for each of the `Endpoints` in the configuration.
 
 The image describes it in more detail:
+![Frontend Diagram](images/frontend.png)
 
 ## TODO
 
