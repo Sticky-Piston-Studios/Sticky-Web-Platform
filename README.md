@@ -24,7 +24,7 @@ The Sticky Web Framework (SWF), developed by Sticky Piston Studios, is an innova
 
 ## Usage
 
-The core of SWF's functionality lies in its configuration file. Users define their application's structure and behavior in this JSON file, which the framework then interprets to set up the necessary backend and frontend components. This approach eliminates the need for repetitive coding tasks and recompilation, making the development process more efficient and user-friendly.
+The core of SWF's functionality lies in its configuration file. Users define their application's structure and behavior in this JSON file, which the framework then interprets to set up the necessary backend and frontend components. This approach eliminates the need for repetitive coding tasks and recompilation, making the development process more efficient and user-friendly. Also, if you simply want to set up hassle-free frontend-only application where you load data from an API endpoint, this framework is just for you!
 
 **Target Audience:**
 
@@ -149,6 +149,7 @@ Then, the backend and frontend endpoints are defined, in groups for easier logic
         "Name": "GetCompany",
         "Method": "GET",
         "Subroute": "id",
+        "QueryParameters": ["apikey"],
         "BodyName": "GetCompany",
         "Action": {
           "Type": "Default",
@@ -165,11 +166,12 @@ Parameters:
 
 - `EndpointGroups` - list of endpoint groups that will share a common `Path`
   - `Name` - name of the endpoint group
-  - `Path` - sub-path of the endpoint that will be prepended to the actual path of the endpoint. If it does not have any `Parameters`, or `Subroute`s then the endpoint ending with `Path` will be called with appropriate `Method`
+  - `Path` - sub-path of the endpoint that will be prepended to the actual path of the endpoint. If it does not have any `QueryParameters`, or `Subroute`s then the endpoint ending with `Path` will be called with appropriate `Method`
     - `Endpoints` - list of endpoints to be called
-      - `Name` - unique name for this `Method` + `Subroute` + `Parameters` combination
+      - `Name` - unique name for this `Method` + `Subroute` + `QueryParameters` combination
       - `Method` - the HTTP method to be used when calling this endpoint. Allowed methods are: `GET`, `POST`, `DELETE` (for now)
       - `Subroute` - optional, is mostly a marker that this route accepts further parameters
+      - `QueryParameters` - these are parameters that are passed as queries to the backend or the API endpoint called
       - `BodyName` - optional, used only when body is necessary. Must match one `Name` in `EndpointBodies`.
       - `Action` - container for fields describing the `Action` that the backend should take when receiving this call
         - `Type` - specifies what action should be taken (`Default` or `Custom`) - refer to [User Guide](#user-guide) for more information
@@ -251,6 +253,21 @@ Parameters:
     - `Type` - type of the field, allowed types: `Id`, `String`, `List<>`, `Int`
 
 ## How does it work?
+
+Here we go in details how the magic of the configuration file translates to the actual code. This chapter is more technical and is dedicated to developers and users who simply want to know more about SWF. The configuration file is read both by the frontend and backend and is parsed by each of them during their respective building time.
+
+### Backend
+
+For backend the routes are created during the compilation of the project and are added one by one by the builder. Once a route is called on the backend it is dynamically filtered whether it matches any of the registered routes and if it does, then the checking of necessary `EndpointBodies` ensues. Once everything matches, the data is passed to the database and the result is returned to the user.
+
+This is ilustrated by this diagram:
+![Backend Diagram](https://github.com/Sticky-Piston-Studios/Sticky-Web-Framework/images/backend.png)
+
+### Frontend
+
+Frontend handles configuration parsing and reading differently because we make usage of **Next.js** dynamic route handling and creation. This is further facilitated by running a script: `generate-api-routes.js` before compiling the project that parses the `configuration.json` and extracts relevant subroutes, creating proper routing structure for the frontend. After the route directory structures are created, the last parts of the routes responsible for last-mile dispatching of endpoints are generated from templates that take into account `QueryParameters` and `Subroute`s for each of the `Endpoints` in the configuration.
+
+The image describes it in more detail:
 
 ## TODO
 
