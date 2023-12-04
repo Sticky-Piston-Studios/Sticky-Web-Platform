@@ -261,7 +261,7 @@ Here we go in details how the magic of the configuration file translates to the 
 For backend the routes are created during the compilation of the project and are added one by one by the builder. Once a route is called on the backend it is dynamically filtered whether it matches any of the registered routes and if it does, then the checking of necessary `EndpointBodies` ensues. Once everything matches, the data is passed to the database and the result is returned to the user.
 
 This is ilustrated by this diagram:
-![Backend Diagram](https://github.com/Sticky-Piston-Studios/Sticky-Web-Framework/images/backend.png)
+![Backend Diagram](images/backend.png)
 
 ### Frontend
 
