@@ -1,3 +1,25 @@
+# SWP InsightsHub
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./media/swp_insights_hub_logo_full_white.png">
+    <img src="./media/swp_insights_hub_logo_full_black.png">
+  </picture>
+</p>
+
+SWP InsightsHub is a platform designed for advanced geovisualization of data in information systems, as well as their monitoring and analysis.
+Its goal is to enable a comprehensive view of the current situation of any installation or system - from roads to transportation networks to cities.
+
+By incorporating artificial intelligence, data filtering, and clustering, we introduce the capability for rapid, advanced analysis, and event prediction. All of this allows for precise planning of activities such as repairs or adjusting system operations, resulting in increased efficiency and optimization.
+
+The uniqueness of our solution lies not only in functionality but also in placing a strong emphasis on the aesthetics and usability of the application interface. Our development team consists of talented programmers and technical artists who work together to ensure the most attractive appearance, animations, and intuitive navigation. This results in users not only gaining access to advanced features but also having a tool that is comfortable and enjoyable to use, making "SWP InsightsHub" not just a powerful business and analytical tool but also an inspiring work environment.
+
+SWP InsightsHub is built on the Sticky Web Platform, our innovative open-source framework designed to streamline the process of creating complete web applications, with a focus on those dedicated to data visualization.
+
+---
+
+# Sticky Web Platform 
+
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="./media/sticky_web_platform_logo_full_white.png">
