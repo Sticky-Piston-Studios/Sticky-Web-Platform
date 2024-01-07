@@ -1,14 +1,14 @@
-# Sticky Web Platform (SWF)
+# Sticky Web Platform (SWP)
 
 -- nice logo! --
 
-The Sticky Web Platform (SWF), developed by Sticky Piston Studios, is an innovative open-source platform designed to streamline the development of web applications. This platform uniquely enables the dynamic creation of endpoints through a single configuration file, which is utilized by both the frontend and backend components of an application.
+The Sticky Web Platform (SWP), developed by Sticky Piston Studios, is an innovative open-source platform designed to streamline the development of web applications. This platform uniquely enables the dynamic creation of endpoints through a single configuration file, which is utilized by both the frontend and backend components of an application.
 
 **Key Features:**
 
 - **Dynamic Endpoint Configuration:**
 
-  SWF allows for the dynamic definition of endpoints, databases, models, and request & response bodies through a simple JSON configuration file. This file serves as the central point of reference for both frontend and backend, significantly reducing the need for code modifications.
+  SWP allows for the dynamic definition of endpoints, databases, models, and request & response bodies through a simple JSON configuration file. This file serves as the central point of reference for both frontend and backend, significantly reducing the need for code modifications.
 
 - **No-Code Backend and Frontend Integration:**
 
@@ -16,7 +16,7 @@ The Sticky Web Platform (SWF), developed by Sticky Piston Studios, is an innovat
 
 - **Extensible and Flexible Architecture:**
 
-  Despite its no-code approach, SWF is designed to be extensible, catering to more complex and customized application needs. Its generic architecture ensures flexibility and adaptability across various use cases.
+  Despite its no-code approach, SWP is designed to be extensible, catering to more complex and customized application needs. Its generic architecture ensures flexibility and adaptability across various use cases.
 
 - **Frontend Utility Functions:**
 
@@ -24,11 +24,11 @@ The Sticky Web Platform (SWF), developed by Sticky Piston Studios, is an innovat
 
 ## Usage
 
-The core of SWF's functionality lies in its configuration file. Users define their application's structure and behavior in this JSON file, which the platform then interprets to set up the necessary backend and frontend components. This approach eliminates the need for repetitive coding tasks and recompilation, making the development process more efficient and user-friendly. Also, if you simply want to set up hassle-free frontend-only application where you load data from an API endpoint, this platform is just for you!
+The core of SWP's functionality lies in its configuration file. Users define their application's structure and behavior in this JSON file, which the platform then interprets to set up the necessary backend and frontend components. This approach eliminates the need for repetitive coding tasks and recompilation, making the development process more efficient and user-friendly. Also, if you simply want to set up hassle-free frontend-only application where you load data from an API endpoint, this platform is just for you!
 
 **Target Audience:**
 
-SWF is ideal for individuals and teams looking to develop web applications without delving deeply into coding. It's particularly useful for:
+SWP is ideal for individuals and teams looking to develop web applications without delving deeply into coding. It's particularly useful for:
 
 - Developers seeking a quick and efficient way to set up both frontend and backend components.
 - Non-technical users who need to create web applications without extensive programming knowledge.
@@ -36,7 +36,7 @@ SWF is ideal for individuals and teams looking to develop web applications witho
 
 ## Contributing
 
-**We welcome contributions to the Sticky Web Platform!** Whether it's feature enhancements, bug fixes, or documentation improvements, your input is valuable. Please refer to our contributing guidelines for more information on how to participate in the development of SWF.
+**We welcome contributions to the Sticky Web Platform!** Whether it's feature enhancements, bug fixes, or documentation improvements, your input is valuable. Please refer to our contributing guidelines for more information on how to participate in the development of SWP.
 
 ## Table of Contents
 
@@ -51,7 +51,7 @@ SWF is ideal for individuals and teams looking to develop web applications witho
 
 ## Development
 
-To quickly get started with the SWF, please clone the repository and set it up using **Sticky Web Platform Manager**:
+To quickly get started with the SWP, please clone the repository and set it up using **Sticky Web Platform Manager**:
 
 ### Sticky Web Platform Manager
 
@@ -102,11 +102,11 @@ Download MongoDB Compass and use `mongodb://root:root@localhost:27017/?authSourc
 
 ## User Guide
 
-Since most users will be content with using the platform as it is, in this section we describe how to create a proper endpoint, model and database configuration that will then be used by backend, frontend and the database. If you are concerned about the exact details of how SWF operates and want to dig deeper into its internals, please refer to [the next section](#how-does-it-work).
+Since most users will be content with using the platform as it is, in this section we describe how to create a proper endpoint, model and database configuration that will then be used by backend, frontend and the database. If you are concerned about the exact details of how SWP operates and want to dig deeper into its internals, please refer to [the next section](#how-does-it-work).
 
 ### `configuration.json` Usage
 
-This file defines the entirety of both frontend-backend and backend to database communication. It also defines how the data should be stored. Changing fields in this file will be reflected in all 3 components the application built on top using SWF.
+This file defines the entirety of both frontend-backend and backend to database communication. It also defines how the data should be stored. Changing fields in this file will be reflected in all 3 components the application built on top using SWP.
 
 Let's walk through an exemplary configuration for this repository in parts, discussing relevant details.
 
@@ -114,7 +114,7 @@ First part is mostly concerned with setting up the database(s) and proper collec
 
 ```JSON
 {
-  "DatabaseConnectionString": "mongodb://root:root@swf-database:27017",
+  "DatabaseConnectionString": "mongodb://root:root@swp-database:27017",
   "Databases": [
     {
       "Name": "Main",
@@ -254,7 +254,7 @@ Parameters:
 
 ## How does it work?
 
-Here we go in details how the magic of the configuration file translates to the actual code. This chapter is more technical and is dedicated to developers and users who simply want to know more about SWF. The configuration file is read both by the frontend and backend and is parsed by each of them during their respective building time.
+Here we go in details how the magic of the configuration file translates to the actual code. This chapter is more technical and is dedicated to developers and users who simply want to know more about SWP. The configuration file is read both by the frontend and backend and is parsed by each of them during their respective building time.
 
 ### Backend
 

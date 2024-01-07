@@ -103,7 +103,7 @@ async function connectToDatabase() {
 	}
 
 	// TODO: Remove this when both script and backend will be able to connect to the database vis the same connection string
-	databaseConnectionString = databaseConnectionString.replace('swf-database', "localhost");
+	databaseConnectionString = databaseConnectionString.replace('swp-database', "localhost");
 
 	// Initialize the database
 	const client = new MongoClient(databaseConnectionString);

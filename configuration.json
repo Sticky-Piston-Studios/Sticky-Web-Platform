@@ -1,5 +1,5 @@
 {
-  "DatabaseConnectionString": "mongodb://root:root@swf-database:27017",
+  "DatabaseConnectionString": "mongodb://root:root@swp-database:27017",
   "Databases": [
     {
       "Name": "Main",

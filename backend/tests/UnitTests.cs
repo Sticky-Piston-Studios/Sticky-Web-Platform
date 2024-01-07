@@ -44,7 +44,7 @@ public class Tests
         DynamicConfiguration dynamicConfiguration = new DynamicConfiguration(dynamicConfigurationFilePath);
 
 
-        Assert.That(dynamicConfiguration.DatabaseConnectionString, Is.EqualTo("mongodb://root:root@swf-database:27017"));
+        Assert.That(dynamicConfiguration.DatabaseConnectionString, Is.EqualTo("mongodb://root:root@swp-database:27017"));
 
         // Databases
         Assert.That(dynamicConfiguration.Databases?[0].Name, Is.EqualTo("Main"));
