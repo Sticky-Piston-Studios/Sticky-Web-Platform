@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./media/sticky_web_platform_logo_full_black.png">
-    <img src="./media/sticky_web_platform_logo_full_white.png">
+    <source media="(prefers-color-scheme: dark)" srcset="./media/sticky_web_platform_logo_full_white.png">
+    <img src="./media/sticky_web_platform_logo_full_black.png">
   </picture>
 </p>
 
