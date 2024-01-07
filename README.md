@@ -1,8 +1,8 @@
-# Sticky Web Framework (SWF)
+# Sticky Web Platform (SWF)
 
 -- nice logo! --
 
-The Sticky Web Framework (SWF), developed by Sticky Piston Studios, is an innovative open-source framework designed to streamline the development of web applications. This framework uniquely enables the dynamic creation of endpoints through a single configuration file, which is utilized by both the frontend and backend components of an application.
+The Sticky Web Platform (SWF), developed by Sticky Piston Studios, is an innovative open-source platform designed to streamline the development of web applications. This platform uniquely enables the dynamic creation of endpoints through a single configuration file, which is utilized by both the frontend and backend components of an application.
 
 **Key Features:**
 
@@ -12,7 +12,7 @@ The Sticky Web Framework (SWF), developed by Sticky Piston Studios, is an innova
 
 - **No-Code Backend and Frontend Integration:**
 
-  The framework offers a no-code, dynamically-configurable backend and a corresponding frontend. This integration is particularly beneficial for users with minimal or no programming experience, as it simplifies the process of web app creation.
+  The platform offers a no-code, dynamically-configurable backend and a corresponding frontend. This integration is particularly beneficial for users with minimal or no programming experience, as it simplifies the process of web app creation.
 
 - **Extensible and Flexible Architecture:**
 
@@ -24,7 +24,7 @@ The Sticky Web Framework (SWF), developed by Sticky Piston Studios, is an innova
 
 ## Usage
 
-The core of SWF's functionality lies in its configuration file. Users define their application's structure and behavior in this JSON file, which the framework then interprets to set up the necessary backend and frontend components. This approach eliminates the need for repetitive coding tasks and recompilation, making the development process more efficient and user-friendly. Also, if you simply want to set up hassle-free frontend-only application where you load data from an API endpoint, this framework is just for you!
+The core of SWF's functionality lies in its configuration file. Users define their application's structure and behavior in this JSON file, which the platform then interprets to set up the necessary backend and frontend components. This approach eliminates the need for repetitive coding tasks and recompilation, making the development process more efficient and user-friendly. Also, if you simply want to set up hassle-free frontend-only application where you load data from an API endpoint, this platform is just for you!
 
 **Target Audience:**
 
@@ -36,7 +36,7 @@ SWF is ideal for individuals and teams looking to develop web applications witho
 
 ## Contributing
 
-**We welcome contributions to the Sticky Web Framework!** Whether it's feature enhancements, bug fixes, or documentation improvements, your input is valuable. Please refer to our contributing guidelines for more information on how to participate in the development of SWF.
+**We welcome contributions to the Sticky Web Platform!** Whether it's feature enhancements, bug fixes, or documentation improvements, your input is valuable. Please refer to our contributing guidelines for more information on how to participate in the development of SWF.
 
 ## Table of Contents
 
@@ -51,25 +51,25 @@ SWF is ideal for individuals and teams looking to develop web applications witho
 
 ## Development
 
-To quickly get started with the SWF, please clone the repository and set it up using **Sticky Web Framework Manager**:
+To quickly get started with the SWF, please clone the repository and set it up using **Sticky Web Platform Manager**:
 
-### Sticky Web Framework Manager
+### Sticky Web Platform Manager
 
 Install prerequisites: `npm install yargs mongodb`
 
 Actions:
 
-- `node .\StickyWebFrameworkManager.js --help`
+- `node .\StickyWebPlatformManager.js --help`
   Displays help.
-- `node .\StickyWebFrameworkManager.js --action InitializeDatabase`  
+- `node .\StickyWebPlatformManager.js --action InitializeDatabase`  
   Connects to database container using `DatabaseConnectionString` defined in configuration file.  
   Creates all databases and collections defined in configuration file.  
   Fills the collections with initial data from the file specified in `InitialData` field of collection defined in configuration file.
-- `node .\StickyWebFrameworkManager.js --action ClearDatabase`  
+- `node .\StickyWebPlatformManager.js --action ClearDatabase`  
   Deletes all databases except `local`, `admin` and `config`.
-- `node .\StickyWebFrameworkManager.js --action Start`  
+- `node .\StickyWebPlatformManager.js --action Start`  
   Starts all `database`, `frontend`, `backend`, `nginx` services defined in docker-compose file in production mode.
-- `node .\StickyWebFrameworkManager.js --action StartDev`  
+- `node .\StickyWebPlatformManager.js --action StartDev`  
   Starts all `database`, `frontend`, `backend`, `nginx` services defined in docker-compose file in development mode.
 
 To run all containers manually:
@@ -102,7 +102,7 @@ Download MongoDB Compass and use `mongodb://root:root@localhost:27017/?authSourc
 
 ## User Guide
 
-Since most users will be content with using the framework as it is, in this section we describe how to create a proper endpoint, model and database configuration that will then be used by backend, frontend and the database. If you are concerned about the exact details of how SWF operates and want to dig deeper into its internals, please refer to [the next section](#how-does-it-work).
+Since most users will be content with using the platform as it is, in this section we describe how to create a proper endpoint, model and database configuration that will then be used by backend, frontend and the database. If you are concerned about the exact details of how SWF operates and want to dig deeper into its internals, please refer to [the next section](#how-does-it-work).
 
 ### `configuration.json` Usage
 
@@ -136,7 +136,7 @@ Parameters:
   - `Name` - database name -`Collections` - list of collections we have in the database
     - `Name` - name of the collection
     - `Model` - which model to use for this collection, the value must match **exactly** with one in `DatabaseModels`
-    - `InitialData` - initial data to be supplied to this collection, done by the `StickyWebFrameworkManager.js`
+    - `InitialData` - initial data to be supplied to this collection, done by the `StickyWebPlatformManager.js`
 
 Then, the backend and frontend endpoints are defined, in groups for easier logical classification:
 

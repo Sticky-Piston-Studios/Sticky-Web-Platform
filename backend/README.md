@@ -1,6 +1,6 @@
 # Sticky Web Backend
 
-Developed by Sticky Piston Studion, **Sticky Web Backend** is a universal, open-source framework revolutinising the creation of API backend application by offering a no-code, no-recompilation, dynamically-configurabl system built with ASP.NET. It is designed with the vision of democratizing API creation, making it approachable and user-friendly for individuals with minimal to no programming skills. Full configurability via a text config file, in combination with its generic achitecture, greately reduces the need for any code changes.
+Developed by Sticky Piston Studion, **Sticky Web Backend** is a universal, open-source platform revolutinising the creation of API backend application by offering a no-code, no-recompilation, dynamically-configurabl system built with ASP.NET. It is designed with the vision of democratizing API creation, making it approachable and user-friendly for individuals with minimal to no programming skills. Full configurability via a text config file, in combination with its generic achitecture, greately reduces the need for any code changes.
 
 ## Features
 
@@ -50,6 +50,6 @@ In release build app will fetch it from folder in which it is executed TODO
 `dotnet run --environment "Development"`
 
 ## Testing
-This project is using NUnit testing framework.  
+This project is using NUnit testing platform.  
 Install ".NET Core Test Explorer" extension to perform tests in VS Code.  
 Make sure that your VS Code settings have `"dotnet-test-explorer.testProjectPath": "./backend/tests/*.csproj"` added. Tests won't be detected and presented in testing panel without it.  

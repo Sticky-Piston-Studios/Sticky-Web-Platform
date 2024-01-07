@@ -1,7 +1,7 @@
-using NUnit.Framework;
+using NUnit.Platform;
 using StickyWebBackend;
 using Microsoft.Extensions.Configuration;
-namespace Sticky_Web_Framework_Tests;
+namespace Sticky_Web_Platform_Tests;
 
 public class Tests
 {

@@ -4,8 +4,8 @@ services:
 # --- DATABASE -----------------------------------------
   database:
     image: mongo
-    container_name: swf-database
-    domainname: sticky-web-framework
+    container_name: swp-database
+    domainname: sticky-web-platform
     restart: always
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
@@ -16,12 +16,12 @@ services:
       - ./database/volume:/data/db # Local volume
       #- ./config/database/init.js:/docker-entrypoint-initdb.d/init-mongo.js:ro # Setup script run on container start
     networks:
-      - swf-net
+      - swp-net
 
 # --- NGINX SERVER -------------------------------------
   nginx:
     image: nginx:latest
-    container_name: swf-nginx
+    container_name: swp-nginx
     build:
       context: ./nginx
       dockerfile: Dockerfile
@@ -35,13 +35,13 @@ services:
       - backend
       - frontend
     networks:
-      - swf-net
+      - swp-net
 
 # --- STICKY WEB BACKEND -------------------------------
   backend:
-    image: swf-backend
-    container_name: swf-backend
-    hostname: swf-backend
+    image: swp-backend
+    container_name: swp-backend
+    hostname: swp-backend
     environment:
       - ASPNETCORE_URLS=http://+:4000
       - ASPNETCORE_ENVIRONMENT=${BACKEND_MODE}
@@ -57,16 +57,16 @@ services:
     depends_on:
       - database
     networks:
-      - swf-net
+      - swp-net
 
 # --- STICKY WEB FRONTEND ------------------------------
   frontend:
-    image: swf-frontend
-    container_name: swf-frontend
-    domainname: sticky-web-framework
+    image: swp-frontend
+    container_name: swp-frontend
+    domainname: sticky-web-platform
     environment:
       - NEXT_TELEMETRY_DISABLED=1 # Disable Next Js default telemetry collecting: https://nextjs.org/telemetry
-      - API_URL=http://swf-backend:4000
+      - API_URL=http://swp-backend:4000
       - NEXT_PUBLIC_API_URL=http://localhost:4000
     build:
       context: ./frontend
@@ -74,9 +74,9 @@ services:
     ports:
       - 3000:3000
     networks:
-      - swf-net
+      - swp-net
       
 # --- CONTAINER NETWORK --------------------------------
 networks:
-  swf-net:
+  swp-net:
     driver: bridge
