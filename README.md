@@ -1,26 +1,30 @@
 # Sticky Web Platform (SWP)
 
--- nice logo! --
+<p align="center">
+  <img src="media/sticky_web_platform_logo_full_black.png" img width=100%>
+</p>
 
-The Sticky Web Platform (SWP), developed by Sticky Piston Studios, is an innovative open-source platform designed to streamline the development of web applications. This platform uniquely enables the dynamic creation of endpoints through a single configuration file, which is utilized by both the frontend and backend components of an application.
+The Sticky Web Platform (SWP) is an innovative open-source framework designed to streamline the development of full-stack web applications. Packaged as a ready-to-deploy Docker container stack, including a React/Next.js frontend, ASP.NET backend projects, MongoDB database, and NGINX server, SWP significantly reduces the time needed for web app creation and setup, from days to a matter of minutes.  
+
+However, the paramount feature of SWP lies in its ability to dynamically define all core components - backend endpoints, frontend fetch API, request & response bodies, and database collections and models - through a single text configuration file.
 
 **Key Features:**
 
-- **Dynamic Endpoint Configuration:**
+- **Dynamic Configuration:**
 
-  SWP allows for the dynamic definition of endpoints, databases, models, and request & response bodies through a simple JSON configuration file. This file serves as the central point of reference for both frontend and backend, significantly reducing the need for code modifications.
+  SWP allows for the dynamic definition of endpoints, databases, models, and HTTP message bodies through a single JSON configuration file. This file serves as the central point of reference for all components setup, keeping them in sync and reducing the need for code modifications.
 
 - **No-Code Backend and Frontend Integration:**
 
-  The platform offers a no-code, dynamically-configurable backend and a corresponding frontend. This integration is particularly beneficial for users with minimal or no programming experience, as it simplifies the process of web app creation.
+  The framework offers a no-code, dynamically-configurable backend and a corresponding frontend. This integration is particularly beneficial for users with minimal or no programming experience, as it greatly simplifies the development process.
 
 - **Extensible and Flexible Architecture:**
 
-  Despite its no-code approach, SWP is designed to be extensible, catering to more complex and customized application needs. Its generic architecture ensures flexibility and adaptability across various use cases.
+  Despite its no-code approach, SWP is designed to be extensible, catering to more complex and customized application needs. Its generic architecture ensures flexibility and adaptability across various use cases. Dynamically created logic can be easily overwritten, in case of more specific needs.
 
-- **Frontend Utility Functions:**
+- **Dynamic Frontend Fetch API:**
 
-  A set of utility functions is provided for the frontend, facilitating seamless communication with the backend. These functions are aware of the definitions set in the configuration file, ensuring consistency and ease of use.
+  A set of utility functions is provided for the frontend to facilitate establishing communication with the backend. These functions are aware of the definitions set in the configuration file, ensuring consistency and ease of use.
 
 ## Usage
 
@@ -59,29 +63,21 @@ Install prerequisites: `npm install yargs mongodb`
 
 Actions:
 
-- `node .\StickyWebPlatformManager.js --help`
-  Displays help.
-- `node .\StickyWebPlatformManager.js --action InitializeDatabase`  
-  Connects to database container using `DatabaseConnectionString` defined in configuration file.  
-  Creates all databases and collections defined in configuration file.  
-  Fills the collections with initial data from the file specified in `InitialData` field of collection defined in configuration file.
-- `node .\StickyWebPlatformManager.js --action ClearDatabase`  
-  Deletes all databases except `local`, `admin` and `config`.
-- `node .\StickyWebPlatformManager.js --action Start`  
-  Starts all `database`, `frontend`, `backend`, `nginx` services defined in docker-compose file in production mode.
-- `node .\StickyWebPlatformManager.js --action StartDev`  
-  Starts all `database`, `frontend`, `backend`, `nginx` services defined in docker-compose file in development mode.
+- `node .\StickyWebPlatformManager.js --help` - Displays help.
+- `node .\StickyWebPlatformManager.js --action InitializeDatabase` - Connects to database container using `DatabaseConnectionString` defined in configuration file. Creates all databases and collections defined in configuration file. Fills the collections with initial data from the file specified in `InitialData` field of collection defined in configuration file.
+- `node .\StickyWebPlatformManager.js --action ClearDatabase` - Deletes all databases except `local`, `admin` and `config`.
+- `node .\StickyWebPlatformManager.js --action Start` - Starts all `database`, `frontend`, `backend`, `nginx` services defined in docker-compose file in the production mode.
+- `node .\StickyWebPlatformManager.js --action StartDev` - Starts all `database`, `frontend`, `backend`, `nginx` services defined in docker-compose file in the development mode.
 
 To run all containers manually:
 
-- `cd <PROJECT_FOLDER>`
-- `docker compose -f "docker-compose.yaml" up database backend frontend nginx -d --build`
+- `docker compose -f "<PROJECT_DIRECTORY>/docker-compose.yaml" up database backend frontend nginx -d --build`
 
 ### Backend
 
 To run backend locally:
 
-- `cd <PROJECT_FOLDER>`
+- `cd <PROJECT_DIRECTORY>/backend`
 - `dotnet restore` (just once)
 - `dotnet run --environment "Development"`
 
@@ -89,7 +85,7 @@ To run backend locally:
 
 To run frontend locally (for hot reloading support), first you have generate the dynamic endpoints (this step has to be done just once):
 
-- `cd <PROJECT_FOLDER>/frontend`
+- `cd <PROJECT_DIRECTORY>/frontend`
 - `npm run generate:api`
 
 Then, run the application:
