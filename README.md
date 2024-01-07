@@ -1,28 +1,26 @@
-# Sticky Web Platform (SWP)
-
 <p align="center">
   <img src="media/sticky_web_platform_logo_full_black.png" img width=100%>
 </p>
 
-The Sticky Web Platform (SWP) is an innovative open-source framework designed to streamline the development of full-stack web applications. Packaged as a ready-to-deploy Docker container stack, including a React/Next.js frontend, ASP.NET backend projects, MongoDB database, and NGINX server, SWP significantly reduces the time needed for web app creation and setup, from days to a matter of minutes.  
+The Sticky Web Platform (SWP) is an innovative **open-source framework** designed to streamline the development of full-stack web applications. Packaged as a ready-to-deploy Docker container stack, including a React/Next.js frontend, ASP.NET backend projects, MongoDB database, and NGINX server, SWP significantly reduces the time needed for web app creation and setup, from days to a matter of minutes.  
 
-However, the paramount feature of SWP lies in its ability to dynamically define all core components - backend endpoints, frontend fetch API, request & response bodies, and database collections and models - through a single text configuration file.
+However, the paramount feature of SWP lies in its **ability to dynamically define all core components** - backend endpoints, frontend fetch API, request & response bodies, and database collections and models - **through a single text configuration file**.
 
-**Key Features:**
+## Key Features
 
-- **Dynamic Configuration:**
+- **Dynamic Configuration**
 
   SWP allows for the dynamic definition of endpoints, databases, models, and HTTP message bodies through a single JSON configuration file. This file serves as the central point of reference for all components setup, keeping them in sync and reducing the need for code modifications.
 
-- **No-Code Backend and Frontend Integration:**
+- **No-Code Backend and Frontend Integration**
 
   The framework offers a no-code, dynamically-configurable backend and a corresponding frontend. This integration is particularly beneficial for users with minimal or no programming experience, as it greatly simplifies the development process.
 
-- **Extensible and Flexible Architecture:**
+- **Extensible and Flexible Architecture**
 
   Despite its no-code approach, SWP is designed to be extensible, catering to more complex and customized application needs. Its generic architecture ensures flexibility and adaptability across various use cases. Dynamically created logic can be easily overwritten, in case of more specific needs.
 
-- **Dynamic Frontend Fetch API:**
+- **Dynamic Frontend Fetch API**
 
   A set of utility functions is provided for the frontend to facilitate establishing communication with the backend. These functions are aware of the definitions set in the configuration file, ensuring consistency and ease of use.
 
@@ -30,7 +28,7 @@ However, the paramount feature of SWP lies in its ability to dynamically define 
 
 The core of SWP's functionality lies in its configuration file. Users define their application's structure and behavior in this JSON file, which the platform then interprets to set up the necessary backend and frontend components. This approach eliminates the need for repetitive coding tasks and recompilation, making the development process more efficient and user-friendly. Also, if you simply want to set up hassle-free frontend-only application where you load data from an API endpoint, this platform is just for you!
 
-**Target Audience:**
+**Target Audience**
 
 SWP is ideal for individuals and teams looking to develop web applications without delving deeply into coding. It's particularly useful for:
 
