@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="media/sticky_web_platform_logo_full_black.png" img width=100%>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./media/sticky_web_platform_logo_full_black.png">
+    <img src="./media/sticky_web_platform_logo_full_white.png">
+  </picture>
 </p>
 
 The Sticky Web Platform (SWP) is an innovative **open-source framework** designed to streamline the development of full-stack web applications. Packaged as a ready-to-deploy Docker container stack, including a React/Next.js frontend, ASP.NET backend projects, MongoDB database, and NGINX server, SWP significantly reduces the time needed for web app creation and setup, from days to a matter of minutes.  
