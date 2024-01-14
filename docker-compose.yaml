@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
 # --- DATABASE -----------------------------------------
-  database:
+  swp-database:
     image: mongo
     container_name: swp-database
     domainname: sticky-web-platform
@@ -18,30 +18,26 @@ services:
     networks:
       - swp-net
 
-# --- NGINX SERVER -------------------------------------
-  nginx:
+# --- WEB SERVER -------------------------------------
+  swp-web-server:
     image: nginx:latest
-    container_name: swp-nginx
-    build:
-      context: ./nginx
-      dockerfile: Dockerfile
+    container_name: swp-web-server
+    domainname: sticky-web-platform
     ports:
       - 80:80
       - 443:443
     volumes:
-      - ./nginx/volume/ssl_certificates:/etc/nginx/ssl:ro
+      - ./web_server:/etc/nginx
     restart: always
-    depends_on:
-      - backend
-      - frontend
+    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
     networks:
       - swp-net
 
 # --- STICKY WEB BACKEND -------------------------------
-  backend:
+  swp-backend:
     image: swp-backend
     container_name: swp-backend
-    hostname: swp-backend
+    domainname: sticky-web-platform
     environment:
       - ASPNETCORE_URLS=http://+:4000
       - ASPNETCORE_ENVIRONMENT=${BACKEND_MODE}
@@ -54,13 +50,11 @@ services:
       # Backend is running in /app directory inside the container,
       # so it will look for the configuration.json file in its parent (according to the appsettings.json file)
       - ./configuration.json:/configuration.json:ro
-    depends_on:
-      - database
     networks:
       - swp-net
 
 # --- STICKY WEB FRONTEND ------------------------------
-  frontend:
+  swp-frontend:
     image: swp-frontend
     container_name: swp-frontend
     domainname: sticky-web-platform

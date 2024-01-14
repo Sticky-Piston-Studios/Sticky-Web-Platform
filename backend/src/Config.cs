@@ -40,6 +40,7 @@ namespace StickyWebBackend
 
     public class DynamicConfiguration
     {
+        public string? BasePath { get; set; }
         public string? DatabaseConnectionString { get; set; }
         public List<DatabaseDefinition>? Databases { get; set; }
         public List<EndpointGroupDefinition>? EndpointGroups { get; set; }

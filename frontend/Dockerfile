@@ -7,6 +7,9 @@ WORKDIR /app
 # Copy the package.json and package-lock.json files to the container
 COPY package*.json ./
 
+# Copy SWP configuration
+COPY ../configuration.json ./configuration.json
+
 # Install dependencies
 RUN npm install --legacy-peer-deps
 
@@ -16,21 +19,5 @@ COPY . .
 # Build the React app
 RUN npm run build
 
-# Expose port 3000
-EXPOSE 3000
-
-# Start the server
-#CMD ["npm", "start"]
-COPY sshd_config /etc/ssh/
-COPY entrypoint.sh ./
-
-# Start and enable SSH
-RUN apk add openssh \
-    && echo "root:Docker!" | chpasswd \
-    && chmod +x ./entrypoint.sh \
-    && cd /etc/ssh/ \
-    && ssh-keygen -A
-
-EXPOSE 8000 2222
-
-ENTRYPOINT [ "./entrypoint.sh" ]
+# Start built app
+CMD ["npm", "start"]

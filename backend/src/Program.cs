@@ -53,7 +53,7 @@ namespace StickyWebBackend
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
 
-             // Swagger
+            // Swagger
             builder.Services.AddSwaggerGen(c =>
             {
                 c.SchemaFilter<EnumSchemaFilter>(); // Display enum variables of model as strings instead of integers
@@ -116,6 +116,7 @@ namespace StickyWebBackend
                 });
             }
 
+
             //app.UseHttpsRedirection();
 
             app.UseRouting();
@@ -143,9 +144,12 @@ namespace StickyWebBackend
             if (!Utils.GetValue(configuration.GetValue<string>("DynamicConfigurationPath"), out dynamicConfigurationFilePath))
             {
                 Utils.ErrorExit($"No path to dynamic configuration file detected in app settings!");
-            } 
+            }
 
             DynamicConfiguration dynamicConfiguration = new DynamicConfiguration(dynamicConfigurationFilePath);
+
+            // Set base path
+            app.UsePathBase(dynamicConfiguration.BasePath + "/backend");
 
             InitializeDatabases(dynamicConfiguration);
            

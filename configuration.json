@@ -1,123 +1,155 @@
 {
-  "DatabaseConnectionString": "mongodb://root:root@swp-database:27017",
-  "Databases": [
+  "Components":
+  [
     {
-      "Name": "Main",
-      "Collections": [
+      "Name": "swp-database",
+      "Type": "Database",
+      "Create": true,
+      "ContainerAddress": "http://swp-database:4001",
+      "BasePath": "/dev/sticky-piston-studios/city-event-map/database",
+      "DatabaseConnectionString": "mongodb://root:root@swp-database:27017",
+      "Databases": [
         {
-          "Name": "Companies",
-          "Model": "Company",
-          "InitialData": "./database/InitialData/Companies.js"
-        }
-      ]
-    }
-  ],
-  "EndpointGroups": [
-    {
-      "Name": "Companies",
-      "Path": "/api/companies",
-      "Endpoints": [
-        {
-          "Name": "GetCompany",
-          "Method": "GET",
-          "Subroute": "id",
-          "BodyName": "GetCompany",
-          "Action": {
-            "Type": "Default",
-            "DatabaseName": "Main",
-            "DatabaseCollectionName": "Companies"
-          }
-        },
-        {
-          "Name": "GetCompanies",
-          "Method": "GET",
-          "BodyName": "GetCompany",
-          "Action": {
-            "Type": "Default",
-            "DatabaseName": "Main",
-            "DatabaseCollectionName": "Companies"
-          }
-        },
-        {
-          "Name": "AddCompany",
-          "Method": "POST",
-          "BodyName": "AddCompany",
-          "Action": {
-            "Type": "Default",
-            "DatabaseName": "Main",
-            "DatabaseCollectionName": "Companies"
-          }
-        },
-        {
-          "Name": "DeleteCompany",
-          "Method": "DELETE",
-          "Subroute": "id",
-          "Action": {
-            "Type": "Default",
-            "DatabaseName": "Main",
-            "DatabaseCollectionName": "Companies"
-          }
-        }
-      ]
-    }
-  ],
-  "DatabaseModels": [
-    {
-      "Name": "Company",
-      "Fields": [
-        {
-          "Name": "Id",
-          "Type": "Id"
-        },
-        {
-          "Name": "Name",
-          "Type": "String"
-        },
-        {
-          "Name": "RestaurantIds",
-          "Type": "List<Id>"
-        },
-        {
-          "Name": "Value",
-          "Type": "Int"
-        }
-      ]
-    }
-  ],
-  "EndpointBodies": [
-    {
-      "Name": "GetCompany",
-      "Fields": [
-        {
-          "Name": "Name",
-          "Type": "String"
-        },
-        {
-          "Name": "RestaurantIds",
-          "Type": "List<Id>"
-        },
-        {
-          "Name": "Value",
-          "Type": "Int"
-        },
-        {
-          "Name": "EmployeeCount",
-          "Type": "Int"
+          "Name": "Main",
+          "Collections": [
+            {
+              "Name": "Companies",
+              "InitialData": "./database/InitialData/Companies.js",
+              "Models": [
+                {
+                  "Name": "Company",
+                  "Fields": [
+                    {
+                      "Name": "Id",
+                      "Type": "Id"
+                    },
+                    {
+                      "Name": "Name",
+                      "Type": "String"
+                    },
+                    {
+                      "Name": "RestaurantIds",
+                      "Type": "List<Id>"
+                    },
+                    {
+                      "Name": "Value",
+                      "Type": "Int"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
         }
       ]
     },
     {
-      "Name": "AddCompany",
-      "Fields": [
+      "Name": "swp-backend",
+      "Type": "Backend",
+      "Create": true,
+      "ContainerAddress": "http://swp-backend:4002",
+      "BasePath": "/dev/sticky-piston-studios/city-event-map/backend",
+      "EndpointGroups": [
         {
-          "Name": "Name",
-          "Type": "String"
+          "Name": "Companies",
+          "Path": "/api/companies",
+          "Endpoints": [
+            {
+              "Name": "GetCompany",
+              "Method": "GET",
+              "Subroute": "id",
+              "BodyName": "GetCompany",
+              "Action": {
+                "Type": "Default",
+                "DatabaseName": "Main",
+                "DatabaseCollectionName": "Companies"
+              }
+            },
+            {
+              "Name": "GetCompanies",
+              "Method": "GET",
+              "BodyName": "GetCompany",
+              "Action": {
+                "Type": "Default",
+                "DatabaseName": "Main",
+                "DatabaseCollectionName": "Companies"
+              }
+            },
+            {
+              "Name": "AddCompany",
+              "Method": "POST",
+              "BodyName": "AddCompany",
+              "Action": {
+                "Type": "Default",
+                "DatabaseName": "Main",
+                "DatabaseCollectionName": "Companies"
+              }
+            },
+            {
+              "Name": "DeleteCompany",
+              "Method": "DELETE",
+              "Subroute": "id",
+              "Action": {
+                "Type": "Default",
+                "DatabaseName": "Main",
+                "DatabaseCollectionName": "Companies"
+              }
+            }
+          ]
+        }
+      ],
+      "EndpointBodies": [
+        {
+          "Name": "GetCompany",
+          "Fields": [
+            {
+              "Name": "Name",
+              "Type": "String"
+            },
+            {
+              "Name": "RestaurantIds",
+              "Type": "List<Id>"
+            },
+            {
+              "Name": "Value",
+              "Type": "Int"
+            },
+            {
+              "Name": "EmployeeCount",
+              "Type": "Int"
+            }
+          ]
         },
         {
-          "Name": "EmployeeCount",
-          "Type": "Int"
+          "Name": "AddCompany",
+          "Fields": [
+            {
+              "Name": "Name",
+              "Type": "String"
+            },
+            {
+              "Name": "EmployeeCount",
+              "Type": "Int"
+            }
+          ]
         }
       ]
+    },
+    {
+      "Name": "swp-frontend",
+      "Type": "Frontend",
+      "Create": true,
+      "ContainerAddress": "http://swp-frontend:4003",
+      "BasePath": "/dev/sticky-piston-studios/city-event-map/frontend"
+    },
+    {
+      "Name": "swp-web-server",
+      "Type": "WebServer",
+      "Create": true,
+      "ContainerAddress": "http://swp-web-server:4004",
+      "BasePath": "/dev/sticky-piston-studios/city-event-map/web-server",
+      "ConfigExtensionFilePath": "./web_server/nginx_config_extension.conf"
     }
   ]
 }
+ 
