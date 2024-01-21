@@ -13,6 +13,7 @@ const { exec } = require('child_process');
 // Define interfaces for configurations and other structured data
 interface Config {
     Components: Component[];
+    ContainerNetworkNames: string[];
 }
 
 enum ComponentType {
@@ -26,9 +27,16 @@ interface Component {
     Name: string,
     Type: ComponentType,
     Create: boolean;
-    ContainerAddress: string,
-    BasePath: string;
+    ContainerConfig: ContainerConfig;
 }
+
+interface ContainerConfig {
+    DockerfilePath: string,
+    DomainSubPath: string;
+    ContainerNetworkName: string,
+    ContainerAddresses: [string, string, string][], // URL, source port, destination port
+    VolumeMappings: [string, string][];
+} 
 
 interface DatabaseComponent extends Component {
     DatabaseConnectionString: string;
@@ -275,6 +283,21 @@ function printError(error: string) {
     console.log(red, error, reset);
 }
 
+function generateDockerRunCommand(containerName: string, config: ContainerConfig): string {
+    const dockerRunCommand = [
+        'docker run',
+        '-d', // Detached mode
+        `--network=${config.ContainerNetworkName}`, // Attach to the specified network
+        `--name=${config.DomainSubPath}`, // Container name
+        `-p ${config.ContainerAddresses.map(addr => `${addr[1]}:${addr[2]}`).join(' -p ')}`, // Port mappings
+        config.VolumeMappings.map(mapping => `-v ${mapping[0]}:${mapping[1]}`).join(' '), // Volume mappings
+        `-v ${process.cwd()}/${config.DomainSubPath}:/app`, // Mount the current directory to /app in the container
+        `${config.DockerfilePath}`, // Dockerfile path
+    ];
+
+    return dockerRunCommand.join(' ');
+}
+
 // -------- ACTIONS --------
 
 async function start(config: Config, development: boolean, componentNames: string[]) {
@@ -296,6 +319,13 @@ async function start(config: Config, development: boolean, componentNames: strin
     process.env['BACKEND_MODE'] = `${mode}`;
     process.env['FRONTEND_MODE'] = `${mode}`;
     process.env['FRONTEND_BASEPATH'] = `XXXXXXXXXXXX`;
+
+    // Create docker commands
+    config.Components.forEach(component => {
+        if (component.Create) {
+            generateDockerRunCommand(component.Name, component.ContainerConfig);
+        }
+    });
 
     await runDockerCompose(componentNames);
 }
