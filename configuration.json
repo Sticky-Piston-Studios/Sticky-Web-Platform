@@ -58,7 +58,7 @@
               "Name": "GetCompany",
               "Method": "GET",
               "Subroute": "id",
-              "BodyName": "GetCompany",
+              "RqBodyName": "GetCompany",
               "Action": {
                 "Type": "Default",
                 "DatabaseName": "Main",

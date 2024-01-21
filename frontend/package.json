@@ -1,27 +1,28 @@
 {
-  "name": "sticky-web-frontend",
+  "name": "swp-fontend",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "generate:api": "node scripts/generate-api-routes.js",
-    "dev": "npm run generate:api && next dev",
-    "build": "npm run generate:api && next build",
-    "start": "npm run generate:api && next start",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
-    "next": "14.0.3",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "next": "14.0.4"
   },
   "devDependencies": {
-    "@reduxjs/toolkit": "^1.9.7",
+    "typescript": "^5",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
     "autoprefixer": "^10.0.1",
-    "next-pwa": "^5.6.0",
-    "next-redux-wrapper": "^8.1.0",
     "postcss": "^8",
-    "react-i18next": "^13.5.0",
-    "redux-persist": "^6.0.0",
-    "tailwindcss": "^3.3.0"
+    "tailwindcss": "^3.3.0",
+    "eslint": "^8",
+    "eslint-config-next": "14.0.4",
+    "next-pwa": "^5.6.0"
   }
 }

@@ -2,96 +2,13 @@
 // Install the packages if you haven't already
 // npm install typescript yargs mongodb ts-node @types/node @types/yargs @types/mongodb
 
+import { Database, DatabaseComponent, FrontendComponent, BackendComponent, Component, WebServerComponent, ComponentType, Config } from "./swp-config-types";
+
 const fs = require('fs');
 const path = require('path');
 const yargs = require('yargs');
 const { MongoClient, ObjectId } = require('mongodb');
 const { exec } = require('child_process');
-
-// -------- INTERFACES --------
-
-// Define interfaces for configurations and other structured data
-interface Config {
-    Components: Component[];
-}
-
-enum ComponentType {
-    Database = "Database",
-    Backend = "Backend",
-    Frontend = "Frontend",
-    WebServer = "WebServer",
-}
-
-interface Component {
-    Name: string,
-    Type: ComponentType,
-    Create: boolean;
-    ContainerAddress: string,
-    BasePath: string;
-}
-
-interface DatabaseComponent extends Component {
-    DatabaseConnectionString: string;
-    Databases: Database[];
-}
-
-interface Database {
-    Name: string;
-    Collections: Collection[];
-}
-
-interface Collection {
-    Name: string;
-    InitialData: string;
-    Models: Model[];
-}
-
-interface Model {
-    Name: string;
-    Fields: Field[];
-}
-
-interface Field {
-    Name: string;
-    Type: string; // Can be more specific, e.g., 'Id' | 'String' | 'Int' | 'List<Id>'
-}
-
-interface BackendComponent extends Component {
-    EndpointGroups: EndpointGroup[];
-    EndpointBodies: EndpointBody[];
-}
-
-interface EndpointGroup {
-    Name: string;
-    Path: string;
-    Endpoints: Endpoint[];
-}
-
-interface Endpoint {
-    Name: string;
-    Method: string; // Can be more specific, e.g., 'GET' | 'POST' | 'PUT' | 'DELETE'
-    Subroute?: string;
-    BodyName: string;
-    Action: Action;
-}
-
-interface Action {
-    Type: string; // Can be more specific based on your application's needs
-    DatabaseName: string;
-    DatabaseCollectionName: string;
-}
-
-interface EndpointBody {
-    Name: string;
-    Fields: Field[]; // Reusing Field interface from above
-}
-
-interface FrontendComponent extends Component {
-}
-
-interface WebServerComponent extends Component {
-    ConfigExtensionFilePath: string;
-}
 
 interface Argv {
     action: string;
@@ -151,6 +68,9 @@ async function main() {
             break;
         case 'ClearDatabase':
             await clearDatabases(config, target_components);
+            break;
+        case 'GenerateFrontendDefinitions':
+            await generateFrontendDefinitions(config, target_components);
             break;
         default:
             printError('Unknown action. Check help using -h flag');
@@ -501,4 +421,9 @@ async function clearDatabase(database: DatabaseComponent) {
     {
         await client.close();
     }
+}
+
+function generateFrontendDefinitions(config: Config, target_components: string[]) {
+    // 
+
 }

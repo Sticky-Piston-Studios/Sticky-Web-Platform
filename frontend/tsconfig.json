@@ -1,0 +1,43 @@
+{
+  "compilerOptions": {
+    "target": "es5", // Specifies the target ECMAScript version for the output JavaScript code.
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ], // List of library files to be included in the compilation.
+    "allowJs": true, // Allows JavaScript files to be compiled.
+    "skipLibCheck": true, // Skips type checking of all declaration files (*.d.ts).
+    "strict": true, // Enables all strict type-checking options.
+    "noEmit": true, // Do not emit outputs (e.g., no JavaScript output files).
+    "esModuleInterop": true, // Enables compatibility with default-imported modules from non-ES Module sources.
+    "module": "esnext", // Specifies the module system for the project. "esnext" refers to the latest.
+    "moduleResolution": "bundler", // Resolution strategy for modules. "bundler" is used with bundling tools like Webpack.
+    "resolveJsonModule": true, // Allows importing '.json' files.
+    "isolatedModules": true, // Ensures each file can be transpiled in isolation, required for Babel.
+    "jsx": "preserve", // Preserves JSX in output (to be transformed by another transform step).
+    "incremental": true, // Enables incremental compilation by saving information about the project graph from the last compilation.
+    "plugins": [ // An array of plugins to use with TypeScript.
+      {
+        "name": "next" // A plugin for Next.js specific enhancements.
+      }
+    ],
+    "paths": { // Custom module resolution paths.
+      "@/*": [
+        "./src/*"
+      ] // Allows you to use "@" as an alias for the "src" directory.
+    }
+  },
+  "include": [
+    "next-env.d.ts", // Include the Next.js type definitions file.
+    "**/*.ts", // Include all TypeScript files.
+    "**/*.tsx", // Include all TypeScript files with JSX.
+    ".next/types/**/*.ts" // Include TypeScript files in a specific .next directory.
+    ,
+    "build/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ] // Exclude the node_modules directory from TypeScript compilation.
+}
+// Many more options are available: https://www.typescriptlang.org/tsconfig
