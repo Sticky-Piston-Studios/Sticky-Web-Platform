@@ -1,5 +1,5 @@
 /database/volume
-*/node_modules
+/node_modules
 
 # MacOS files
 .DS_Store

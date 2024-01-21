@@ -2,7 +2,7 @@
 // Install the packages if you haven't already
 // npm install typescript yargs mongodb ts-node @types/node @types/yargs @types/mongodb
 
-import { Database, DatabaseComponent, FrontendComponent, BackendComponent, Component, WebServerComponent, ComponentType, Config } from "./swp-config-types";
+import { Database, DatabaseComponent, FrontendComponent, BackendComponent, Component, WebServerComponent, ComponentType, Config, ContainerConfig } from "./swp-config-types";
 
 const fs = require('fs');
 const path = require('path');
@@ -118,8 +118,8 @@ function readConfig(configPath: string): Config {
 function updateWebServerConfig(config: Config, configuration_file_path: string)
 {
     const componentBlockTemplate = (component: Component) => 
-        `location /${component.BasePath} {\n` +
-        `    proxy_pass ${component.ContainerAddress};\n` +
+        `location /${component.ContainerConfig.DomainSubPath} {\n` +
+        `    proxy_pass ${component.ContainerConfig.ContainerAddresses[0]};\n` +
         `    proxy_set_header Host $host;\n` +
         `    proxy_set_header X-Real-IP $remote_addr;\n` +
         `    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n` +
