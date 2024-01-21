@@ -5,8 +5,14 @@
       "Name": "swp-database",
       "Type": "Database",
       "Create": true,
-      "ContainerAddress": "http://swp-database:4001",
-      "BasePath": "/dev/sticky-piston-studios/city-event-map/database",
+      "ContainerConfig":
+      {
+        "DockerfilePath": "./components/database/Dockerfile",
+        "DomainSubPath": "/sticky-web-platform/database",
+        "ContainerNetworkName": "swp-net",
+        "ContainerAddress": [["http://10.1.0.121", "4001", "27017"]],
+        "VolumeMappings": [["./volumes", "./data/db"]]
+      },
       "DatabaseConnectionString": "mongodb://root:root@swp-database:27017",
       "Databases": [
         {
@@ -47,8 +53,14 @@
       "Name": "swp-backend",
       "Type": "Backend",
       "Create": true,
-      "ContainerAddress": "http://swp-backend:4002",
-      "BasePath": "/dev/sticky-piston-studios/city-event-map/backend",
+      "ContainerConfig":
+      {
+        "DockerfilePath": "./components/backend/Dockerfile",
+        "DomainSubPath": "/sticky-web-platform/backend",
+        "ContainerNetworkName": "swp-net",
+        "ContainerAddress": [["http://10.1.0.122", "4002", "4002"]],
+        "VolumeMappings": null
+      },
       "EndpointGroups": [
         {
           "Name": "Companies",
@@ -139,17 +151,32 @@
       "Name": "swp-frontend",
       "Type": "Frontend",
       "Create": true,
-      "ContainerAddress": "http://swp-frontend:4003",
-      "BasePath": "/dev/sticky-piston-studios/city-event-map/frontend"
+      "ContainerConfig":
+      {
+        "DockerfilePath": "./components/frontend/Dockerfile",
+        "DomainSubPath": "/sticky-web-platform/backend",
+        "ContainerNetworkName": "swp-net",
+        "ContainerAddress": [["http://10.1.0.123", "4003", "4003"]],
+        "VolumeMappings": null
+      }
     },
     {
       "Name": "swp-web-server",
       "Type": "WebServer",
       "Create": true,
-      "ContainerAddress": "http://swp-web-server:4004",
-      "BasePath": "/dev/sticky-piston-studios/city-event-map/web-server",
-      "ConfigExtensionFilePath": "./web_server/nginx_config_extension.conf"
+      "ContainerConfig":
+      {
+        "DockerfilePath": "./components/web-server/Dockerfile",
+        "DomainSubPath": "/sticky-web-platform/web-server",
+        "ContainerNetworkName": "swp-net",
+        "ContainerAddress": [
+          ["http://10.1.0.124", "80", "80"], 
+          ["http://10.1.0.124", "443", "443"] 
+        ],
+        "VolumeMappings": null
+      },
+      "ConfigExtensionFilePath": "./component/web_server/nginx_config_extension.conf"
     }
-  ]
+  ],
+  "ContainerNetworkNames": ["swp-net"]
 }
- 
