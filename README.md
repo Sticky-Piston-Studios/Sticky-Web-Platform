@@ -2,7 +2,7 @@
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./media/swp_insights_hub_logo_full_white.png">
+    <source media="(prefers-color-scheme: dark)" srcset="./media/logos/swp_insights_hub_logo_full_white.png">
     <img src="./media/swp_insights_hub_logo_full_black.png">
   </picture>
 </p>
@@ -22,7 +22,7 @@ SWP InsightsHub is built on the Sticky Web Platform, our innovative open-source 
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./media/sticky_web_platform_logo_full_white.png">
+    <source media="(prefers-color-scheme: dark)" srcset="./media/logos/sticky_web_platform_logo_full_white.png">
     <img src="./media/sticky_web_platform_logo_full_black.png">
   </picture>
 </p>
