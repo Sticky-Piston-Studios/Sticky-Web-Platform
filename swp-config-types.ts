@@ -20,11 +20,15 @@ export interface Component {
 }
 
 export interface ContainerConfig {
-    DockerfilePath: string,
-    DomainSubPath: string;
-    ContainerNetworkName: string,
-    ContainerAddresses: [string, string, string][], // URL, source port, destination port
-    VolumeMappings: [string, string][];
+    // Either ImageName or DockerfilePath must be set
+    ImageName: string, // If set image will be pulled from Docker Hub
+    DockerfilePath: string, // If set, docker build command will be used to build the image using Dockerfile at this path, name of the image will be set to the name of component
+    
+    DomainSubPath: string; // Optional
+    ContainerNetworkName: string, // Optional
+    PortsMapping: [string, string][], // One required (source port, destination port)
+    VolumeMappings: [string, string][]; // Optional (tho usually required to access SWP Config file)
+    EnvironmentVariables: [string, string][]; // Optional
 } 
 
 export interface DatabaseComponent extends Component {

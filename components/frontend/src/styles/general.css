@@ -1,0 +1,224 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+img {
+  max-width: none;
+}
+
+/* Wrap with layer components to make styles available in Tailwind responsive design (sm: md: lg:)*/
+@layer components {
+
+  /* Wrap contents of <main> with this class to apply background and text style that reacts to dark/light theme */
+  .basic-theme {
+    @apply text-netural-900 dark:text-white dark:bg-black bg-white;
+  }
+
+  /* --- Text ----------------------------------------------------------------------- */
+
+  .navbar-text {
+    @apply text-netural-900 dark:text-white font-poppins dark:font-light font-bold text-2xl md:text-base text-nowrap;
+  }
+
+  .horizontal-line {
+    @apply h-[1px] w-full bg-netural-300 my-[32px];
+  }
+
+  .gradient-text {
+    @apply bg-clip-text w-fit text-transparent;
+    background-image: linear-gradient(90deg, #d1d1d1 0%, #4e4e4e 100%);
+  }
+
+  /* --- Interaction effects -------------------------------------------------------- */
+
+  /* Lighten on hover, darken on click */
+  .interaction-brighness-light {
+    @apply hover:brightness-[1.2] active:brightness-[0.6] transition-all;
+  }
+
+  /* Darken on hover, darken further on click */
+  .interaction-brighness-dark {
+    @apply hover:brightness-[0.8] active:brightness-[0.6] transition-all;
+  }
+
+  /* Show expanding undeline on hover */
+  .interaction-underline {
+    position: relative;
+  }
+  .interaction-underline:hover:after {
+    @apply w-full left-0 font-extrabold opacity-100;
+  }
+  .interaction-underline:after {
+    @apply content-[""] dark:bg-netural-300 bg-netural-800 opacity-0 pointer-events-none bottom-[2px] left-[50%] absolute w-[0%] h-[1px] ;
+    transition-timing-function: cubic-bezier(0.25, 0.8, 0.25, 1);
+    transition-duration: 400ms;
+    transition-property: all;
+  }
+
+  /* --- Navigation ----------------------------------------------------------------- */
+
+  .navigation-button {
+    @apply interaction-brighness-dark p-[12px] md:py-2 navbar-text rounded; 
+  }
+
+  /* --- Hamburger --- */
+  .hamburger-menu {
+    @apply relative block m-[5px] w-[30px] h-[20px] cursor-pointer dark:interaction-brighness-dark interaction-brighness-light;
+    background: transparent;
+  }
+  .hamburger-menu input {
+    display: none;
+  }
+  .hamburger-menu span {
+    @apply dark:bg-white bg-black block absolute h-[3px] w-full rounded-[1px] opacity-100 left-0;
+    transform: rotate(0deg);
+    transition: 0.22s ease-in-out;
+  }
+  .hamburger-menu span:nth-of-type(1) {
+    top: 0px;
+    transform-origin: left center;
+  }
+  .hamburger-menu span:nth-of-type(2) {
+    top: 50%;
+    transform: translateY(-50%);
+    transform-origin: left center;
+  }
+  .hamburger-menu span:nth-of-type(3) {
+    top: 100%;
+    transform-origin: left center;
+    transform: translateY(-100%);
+  }
+  .hamburger-menu-open span:nth-of-type(1) {
+    transform: rotate(45deg);
+    top: 0px;
+    left: 5px;
+  }
+  .hamburger-menu-open span:nth-of-type(2) {
+    width: 0%;
+    opacity: 0;
+  }
+  .hamburger-menu-open span:nth-of-type(3) {
+    transform: rotate(-45deg);
+    top: 21px;
+    left: 5px;
+  }
+
+  /* --- Chevron --- */
+  /* To change size: Adjust span height and gap */
+  .chevron-dropdown {
+    @apply flex items-center cursor-pointer interaction-brighness-dark;
+  }
+  .chevron {  
+    @apply flex gap-[2px] cursor-pointer;
+    transform: rotate(-90deg) translateX(1px);
+    transition: 0.5s ease-in-out;
+  }
+  .chevron input {
+    display: none;
+  }
+  .chevron-span {
+    @apply bg-netural-800 dark:bg-white inline-block h-[10px] w-[3px]; 
+    transition: 0.25s ease-in-out;
+  }
+  .chevron span:nth-of-type(1) {
+    transform: rotate(-45deg);
+  }
+  .chevron span:nth-of-type(2) {
+    transform: rotate(45deg);
+  }
+  .chevron-open span:nth-of-type(1) {
+    transform: rotate(45deg);
+  }
+  .chevron-open span:nth-of-type(2) {
+    transform: rotate(-45deg);
+  } 
+
+  /* --- Decorations ---------------------------------------------------------------- */
+
+  .background-item {
+    @apply absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] z-[-10];
+  }
+
+  .background-piston {
+    @apply background-item w-[300px] sm:w-[400px] md:w-[500px] opacity-10;
+  }
+
+  .background-circle-glow {
+    @apply background-item rounded-[50%];
+    background: radial-gradient(closest-side, #4d358f25, #00000000); 
+  }
+
+  .background-circle-glow-home {
+    @apply background-item rounded-[50%];
+    background: radial-gradient(closest-side, #4d358f31 0%,#4D358F31 40%, #4D358F00 100%); 
+  }
+
+  .background-circle-home {
+    @apply background-item rounded-[50%];
+    border: solid 1px #7c65ff1a;
+    background: radial-gradient(closest-side, #ffffff00 0%,#00000000 90%, #00000046 100%); 
+  }
+
+  .gradient-border-box {
+    background: theme('colors.sticky-gradient-border');
+    border: 2px solid transparent;
+  }
+  
+  .gradient-background-glow {
+    @apply relative p-[2px] z-[1];
+  }
+  .gradient-background-glow:before {
+    @apply content-[""] absolute top-0 left-0 w-full h-full z-[-1] opacity-[0.3];
+    background-image: theme('colors.sticky-gradient-strong');
+    filter: blur(20px);
+  } 
+
+  .shadow-1 {
+    box-shadow: 2px 2px 16px rgba(0, 0, 0, 0.7);
+  }
+
+  .shadow-2 {
+    filter: drop-shadow(2px 2px 12px #0000006b);
+  }
+
+  .shadow-3 {
+    filter: drop-shadow(2px 2px 12px #00000038);
+  }
+
+
+  /* --- Animated loader ------------------------------------------------------------ */
+
+  .loader {
+    @apply w-[5px] h-[7px] block mx-[20px] my-auto rounded-[2px] relative bg-sticky-pink;
+    animation: animloader 0.3s 0.3s linear infinite alternate;
+  }
+  .loader::after,
+  .loader::before {
+    @apply content-[""] box-border w-[5px] h-[7px] rounded-[2px] absolute left-[50%] translate-x-[-50%] top-[15px];
+    background: theme('colors.sticky-blue');
+    animation: animloader 0.3s 0.45s linear infinite alternate;
+  }
+  .loader::after {
+      top: -15px;
+      animation-delay: 0s;
+      background: theme('colors.sticky-orange');
+  }
+  
+  @keyframes animloader {
+      0% { width: 4.8px }
+      100% { width: 48px}
+  }
+
+  /* --- Other ---------------------------------------------------------------------- */
+
+  .screen-fade-out {
+    @apply flex h-[100%] w-screen justify-center items-center fixed z-[15] bg-black pointer-events-none;
+    animation: fadeOut 0.5s ease-out forwards;
+  }
+
+  @keyframes fadeOut {
+    0% { opacity: 1; }
+    10% { opacity: 1; }
+    100% { opacity: 0;}
+  }
+}

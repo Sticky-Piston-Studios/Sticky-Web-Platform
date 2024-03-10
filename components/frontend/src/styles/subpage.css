@@ -1,0 +1,18 @@
+/* Import Tailwind classes into the project */
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "./general.css";
+@import "tailwindcss/utilities";
+
+/* Wrap with layer components to make styles available in Tailwind responsive design (sm: md: lg:)*/
+@layer components {
+
+  p {
+    @apply font-montserrat text-[16px] md:text-[18px] leading-[32px] text-black;
+  }
+
+  h1 {
+    @apply text-[48px] md:text-[52px] leading-[48px] font-bold text-[#000000] ;
+  }
+
+}

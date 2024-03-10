@@ -1,16 +1,25 @@
-import Image from 'next/image'
+'use client'
 
-// Main panel should fetch data 
-// And draw item list
-// Click plus icon to move list from center to the left and popup add item window
-// Click minus to show x button next to each item
-// Click pencil icon to show
-// Item
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import localeConfig from '@/../locale.config';
 
-export default function Home() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <h1>hello</h1>
-    </main>
-  )
+// Just redirect page detecting preferred language of the user, usually the language of the browser UI
+export default function Page() {
+    const router = useRouter();
+
+    useEffect(() => {
+      const browserLocale = navigator.language.split('-')[0]; // Extract the base language
+      const localeToRedirect = localeConfig.locales.includes(browserLocale) ? browserLocale : localeConfig.defaultLocale;
+
+      router.push(`/${localeToRedirect}`);
+    }, [router]);
+
+    return (
+      <div className='flex h-screen w-screen justify-center items-center absolute'>
+        <div className='loader my-auto mx-auto'></div>
+      </div>
+    );
 }
+
+

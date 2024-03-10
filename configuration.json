@@ -7,11 +7,16 @@
       "Create": true,
       "ContainerConfig":
       {
-        "DockerfilePath": "./components/database/Dockerfile",
+        "ImageName": "mongo:latest",
+        "DockerfilePath": "",
         "DomainSubPath": "/sticky-web-platform/database",
         "ContainerNetworkName": "swp-net",
-        "ContainerAddress": [["http://10.1.0.121", "4001", "27017"]],
-        "VolumeMappings": [["./volumes", "./data/db"]]
+        "PortsMapping": [["27017", "27017"]],
+        "VolumeMappings": [["./database/volume", "/data/db"]],
+        "EnvironmentVariables": [
+          ["MONGO_INITDB_ROOT_USERNAME", "root"],
+          ["MONGO_INITDB_ROOT_PASSWORD", "root"]
+        ]
       },
       "DatabaseConnectionString": "mongodb://root:root@swp-database:27017",
       "Databases": [
@@ -55,11 +60,16 @@
       "Create": true,
       "ContainerConfig":
       {
+        "ImageName": "",
         "DockerfilePath": "./components/backend/Dockerfile",
         "DomainSubPath": "/sticky-web-platform/backend",
         "ContainerNetworkName": "swp-net",
-        "ContainerAddress": [["http://10.1.0.122", "4002", "4002"]],
-        "VolumeMappings": null
+        "PortsMapping": [["4000", "4000"]],
+        "VolumeMappings": [["./configuration.json", "/configuration.json:ro"]],
+        "EnvironmentVariables": [
+          ["ASPNETCORE_URLS", "http://+:4000"],
+          ["ASPNETCORE_ENVIRONMENT", "${BACKEND_MODE}"]
+        ]
       },
       "EndpointGroups": [
         {
@@ -153,11 +163,17 @@
       "Create": true,
       "ContainerConfig":
       {
+        "ImageName": "",
         "DockerfilePath": "./components/frontend/Dockerfile",
-        "DomainSubPath": "/sticky-web-platform/backend",
+        "DomainSubPath": "/sticky-web-platform/frontend",
         "ContainerNetworkName": "swp-net",
-        "ContainerAddress": [["http://10.1.0.123", "4003", "4003"]],
-        "VolumeMappings": null
+        "PortsMapping": [["3000", "3000"]],
+        "VolumeMappings": [["./configuration.json", "/configuration.json:ro"]],
+        "EnvironmentVariables": [
+          ["NEXT_TELEMETRY_DISABLED", "1"],
+          ["API_URL", "http://swp-backend:4000"],
+          ["NEXT_PUBLIC_API_URL", "http://localhost:3000"]
+        ]
       }
     },
     {
@@ -166,14 +182,17 @@
       "Create": true,
       "ContainerConfig":
       {
-        "DockerfilePath": "./components/web-server/Dockerfile",
+        "ImageName": "",
+        "DockerfilePath": "./components/web_server/Dockerfile",
+
         "DomainSubPath": "/sticky-web-platform/web-server",
         "ContainerNetworkName": "swp-net",
         "ContainerAddress": [
-          ["http://10.1.0.124", "80", "80"], 
-          ["http://10.1.0.124", "443", "443"] 
+          ["80", "80"], 
+          ["443", "443"] 
         ],
-        "VolumeMappings": null
+        "VolumeMappings": [["./web_server", "/etc/nginx"]],
+        "EnvironmentVariables": {}
       },
       "ConfigExtensionFilePath": "./component/web_server/nginx_config_extension.conf"
     }

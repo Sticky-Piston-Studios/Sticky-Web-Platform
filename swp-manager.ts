@@ -119,7 +119,7 @@ function updateWebServerConfig(config: Config, configuration_file_path: string)
 {
     const componentBlockTemplate = (component: Component) => 
         `location /${component.ContainerConfig.DomainSubPath} {\n` +
-        `    proxy_pass ${component.ContainerConfig.ContainerAddresses[0]};\n` +
+        `    proxy_pass http://${component.Name}:${component.ContainerConfig.PortsMapping[0][0]}\n;` +
         `    proxy_set_header Host $host;\n` +
         `    proxy_set_header X-Real-IP $remote_addr;\n` +
         `    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n` +
@@ -195,19 +195,51 @@ function printError(error: string) {
     console.log(red, error, reset);
 }
 
-function generateDockerRunCommand(containerName: string, config: ContainerConfig): string {
-    const dockerRunCommand = [
-        'docker run',
-        '-d', // Detached mode
-        `--network=${config.ContainerNetworkName}`, // Attach to the specified network
-        `--name=${config.DomainSubPath}`, // Container name
-        `-p ${config.ContainerAddresses.map(addr => `${addr[1]}:${addr[2]}`).join(' -p ')}`, // Port mappings
-        config.VolumeMappings.map(mapping => `-v ${mapping[0]}:${mapping[1]}`).join(' '), // Volume mappings
-        `-v ${process.cwd()}/${config.DomainSubPath}:/app`, // Mount the current directory to /app in the container
-        `${config.DockerfilePath}`, // Dockerfile path
-    ];
+function generateDockerBuildCommand(containerName: string, dockerfilePath: string): string {
 
-    return dockerRunCommand.join(' ');
+    let dockerBuildCommand = 'docker build ';
+
+    // Image name (tag)
+    dockerBuildCommand += `-t ${containerName}`;
+
+    // Dockerfile 
+    dockerBuildCommand += ` ${dockerfilePath}`;
+
+    return dockerBuildCommand
+}
+
+function generateDockerRunCommand(containerName: string, config: ContainerConfig): string {
+
+    let dockerRunCommand = 'docker run -d';
+
+    // container_name
+    if (containerName !== "") {
+        dockerRunCommand += ` --name=${containerName}`; // Container name
+    }
+
+    // networks
+    if (config.ContainerNetworkName !== "") {
+        dockerRunCommand += `--network=${config.ContainerNetworkName}`; // Container name
+    }
+
+    // ports
+    if (config.PortsMapping.length > 0) {
+        dockerRunCommand += ` ${config.PortsMapping.map(addr => ` -p ${addr[0]}:${addr[1]}`).join(' ')}`; // Port mappings
+    }
+
+    // volumes
+    if (config.VolumeMappings.length > 0) {
+        dockerRunCommand += ` ${config.VolumeMappings.map(mapping => `-v ${mapping[0]}:${mapping[1]}`).join(' ')}`; // Volume mappings
+    }
+
+    // environment variables
+    if (config.EnvironmentVariables.length > 0) {
+        dockerRunCommand += ` ${config.EnvironmentVariables.map(env => `-e ${env[0]}=${env[1]}`).join(' ')}`; // Environment variables
+    }
+
+    dockerRunCommand += `${config.ImageName}`;
+
+    return dockerRunCommand;
 }
 
 // -------- ACTIONS --------
@@ -232,30 +264,41 @@ async function start(config: Config, development: boolean, componentNames: strin
     process.env['FRONTEND_MODE'] = `${mode}`;
     process.env['FRONTEND_BASEPATH'] = `XXXXXXXXXXXX`;
 
-    // Create docker commands
-    config.Components.forEach(component => {
+    // Create docker build and run commands and execute them
+    let componentsStarted = 0;
+    config.Components.forEach(async component => {
         if (component.Create) {
-            generateDockerRunCommand(component.Name, component.ContainerConfig);
+
+            console.log(`Starting component: ${component.Name} (${componentsStarted + 1}/${config.Components.length}) ...`);
+
+            // Generate docker image only when DockerfilePath is set
+            // If not run just docker run command that will pull the image from Docker Hub
+            if (component.ContainerConfig.DockerfilePath !== "") {
+                console.log(`Building Docker image for: ${component.Name} ...`);
+                const dockerBuildCommand = generateDockerBuildCommand(component.Name, component.ContainerConfig.DockerfilePath);
+                try {
+                    let output: string = await execCommandAsync(dockerBuildCommand);
+                    console.log(`${output}`);
+                } catch (error) {
+                    printError((error as Error).message);
+                    process.exit(1);
+                }
+            }
+
+            // Run the Docker container
+            console.log(`Running Docker container for: ${component.Name} ...`);
+            const dockerRunCommand = generateDockerRunCommand(component.Name, component.ContainerConfig);
+            try {
+                let output: string = await execCommandAsync(dockerRunCommand);
+                console.log(`${output}`);
+            } catch (error) {
+                printError((error as Error).message);
+                process.exit(1);
+            }
+
+            componentsStarted++;
         }
     });
-
-    await runDockerCompose(componentNames);
-}
-
-
-async function runDockerCompose(components: string[]) {
-    // Command to run Docker Compose
-    console.log(`Starting Docker containers for components: ${components.join(', ')} ...`);
-
-    // Execute the command
-    const dockerCommand = `docker-compose -f docker-compose.yaml up ${components.join(' ')} -d --build`;
-    try {
-        let output: string = await execCommandAsync(dockerCommand);
-        console.log(`${output}`);
-    } catch (error) {
-        printError((error as Error).message);
-        process.exit(1);
-    }
 }
 
 async function stop(config: Config, componentNames: string[]) {
