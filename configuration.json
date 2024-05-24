@@ -12,7 +12,7 @@
         "DomainSubPath": "/sticky-web-platform/database",
         "ContainerNetworkName": "swp-net",
         "PortsMapping": [["27017", "27017"]],
-        "VolumeMappings": [["./database/volume", "/data/db"]],
+        "VolumeMappings": [["./components/database/volume", "/data/db"]],
         "EnvironmentVariables": [
           ["MONGO_INITDB_ROOT_USERNAME", "root"],
           ["MONGO_INITDB_ROOT_PASSWORD", "root"]
@@ -80,7 +80,8 @@
               "Name": "GetCompany",
               "Method": "GET",
               "Subroute": "id",
-              "RqBodyName": "GetCompany",
+              "RequestBodyName": "GetCompany",
+              "ResponseBodyName": "GetCompany",
               "Action": {
                 "Type": "Default",
                 "DatabaseName": "Main",
@@ -90,7 +91,8 @@
             {
               "Name": "GetCompanies",
               "Method": "GET",
-              "BodyName": "GetCompany",
+              "RequestBodyName": "GetCompanies",
+              "ResponseBodyName": "GetCompanies",
               "Action": {
                 "Type": "Default",
                 "DatabaseName": "Main",
@@ -98,9 +100,19 @@
               }
             },
             {
+              "Name": "GetCompaniesCustom",
+              "Method": "GET",
+              "BodyName": "GetCompanyCustom",
+              "Action": {
+                "Type": "Custom",
+                "Name": "GetCompaniesCustom"
+              }
+            },
+            {
               "Name": "AddCompany",
               "Method": "POST",
-              "BodyName": "AddCompany",
+              "RequestBodyName": "AddCompany",
+              "ResponseBodyName": "AddCompany",
               "Action": {
                 "Type": "Default",
                 "DatabaseName": "Main",
@@ -184,17 +196,16 @@
       {
         "ImageName": "",
         "DockerfilePath": "./components/web_server/Dockerfile",
-
         "DomainSubPath": "/sticky-web-platform/web-server",
         "ContainerNetworkName": "swp-net",
-        "ContainerAddress": [
+        "PortsMapping": [
           ["80", "80"], 
           ["443", "443"] 
         ],
         "VolumeMappings": [["./web_server", "/etc/nginx"]],
         "EnvironmentVariables": {}
       },
-      "ConfigExtensionFilePath": "./component/web_server/nginx_config_extension.conf"
+      "ConfigExtensionFilePath": "./components/web_server/nginx_config_extension.conf"
     }
   ],
   "ContainerNetworkNames": ["swp-net"]

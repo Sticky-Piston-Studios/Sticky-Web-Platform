@@ -78,7 +78,7 @@ async function main() {
     }
 
     // Notify about the success
-    console.log(`Operation performed successfully!${Math.floor(Math.random() * Math.floor(5)) === 4 ? " #stay_sticky" : ""}`);
+    console.log(`Operation completed successfully!${Math.floor(Math.random() * Math.floor(5)) === 4 ? " #stay_sticky" : ""}`);
 }
 
 // -------- FUNCTIONS --------
@@ -118,8 +118,8 @@ function readConfig(configPath: string): Config {
 function updateWebServerConfig(config: Config, configuration_file_path: string)
 {
     const componentBlockTemplate = (component: Component) => 
-        `location /${component.ContainerConfig.DomainSubPath} {\n` +
-        `    proxy_pass http://${component.Name}:${component.ContainerConfig.PortsMapping[0][0]}\n;` +
+        `location ${component.ContainerConfig.DomainSubPath} {\n` +
+        `    proxy_pass http://${component.Name}:${component.ContainerConfig.PortsMapping[0][0]};\n` +
         `    proxy_set_header Host $host;\n` +
         `    proxy_set_header X-Real-IP $remote_addr;\n` +
         `    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n` +
@@ -152,6 +152,7 @@ function areComponentsInConfig(config: Config, ComponentNamesToCheck: string[], 
     
     let componentsNotFound: string[] = [];
     let componentNames = getAllComponentNames(config);
+
     ComponentNamesToCheck.forEach(requestedComponentName => {
         if (componentNames.includes(requestedComponentName) === false)
         {
@@ -163,11 +164,11 @@ function areComponentsInConfig(config: Config, ComponentNamesToCheck: string[], 
     {
         if (componentsNotFound.length === 1)
         {
-            printError(`Component ${componentNames.join(", ")} is not defined in the configuration file`);
+            printError(`Component \"${componentsNotFound[0]}\" is not defined in the configuration file`);
         }
         else
         {
-            printError(`Components ${componentNames.join(", ")} are not defined in the configuration file`);
+            printError(`Components \"${componentNames.join("\", \"")}\" are not defined in the configuration file`);
         }
         process.exit(1);
     }
@@ -219,17 +220,22 @@ function generateDockerRunCommand(containerName: string, config: ContainerConfig
 
     // networks
     if (config.ContainerNetworkName !== "") {
-        dockerRunCommand += `--network=${config.ContainerNetworkName}`; // Container name
+        dockerRunCommand += ` --network=${config.ContainerNetworkName}`; // Container name
     }
 
     // ports
     if (config.PortsMapping.length > 0) {
-        dockerRunCommand += ` ${config.PortsMapping.map(addr => ` -p ${addr[0]}:${addr[1]}`).join(' ')}`; // Port mappings
+        dockerRunCommand += ` ${config.PortsMapping.map(addr => `-p ${addr[0]}:${addr[1]}`).join(' ')}`; // Port mappings
     }
 
     // volumes
+    const currentWorkingDirectory = path.resolve(process.cwd());
+
     if (config.VolumeMappings.length > 0) {
-        dockerRunCommand += ` ${config.VolumeMappings.map(mapping => `-v ${mapping[0]}:${mapping[1]}`).join(' ')}`; // Volume mappings
+        dockerRunCommand += ` ${config.VolumeMappings.map(mapping => {
+            const sourcePath = mapping[0].replace(/\./g, currentWorkingDirectory); // Replace dot with `pwd`
+            return `-v ${sourcePath}:${mapping[1]}`;
+        }).join(' ')}`; // Volume mappings
     }
 
     // environment variables
@@ -237,7 +243,7 @@ function generateDockerRunCommand(containerName: string, config: ContainerConfig
         dockerRunCommand += ` ${config.EnvironmentVariables.map(env => `-e ${env[0]}=${env[1]}`).join(' ')}`; // Environment variables
     }
 
-    dockerRunCommand += `${config.ImageName}`;
+    dockerRunCommand += ` ${config.ImageName}`;
 
     return dockerRunCommand;
 }
@@ -266,10 +272,11 @@ async function start(config: Config, development: boolean, componentNames: strin
 
     // Create docker build and run commands and execute them
     let componentsStarted = 0;
-    config.Components.forEach(async component => {
-        if (component.Create) {
+    for (const component of config.Components) {
 
-            console.log(`Starting component: ${component.Name} (${componentsStarted + 1}/${config.Components.length}) ...`);
+        if (componentNames.includes(component.Name) && component.Create) {
+
+            console.log(`Starting component: ${component.Name} (${componentsStarted + 1}/${componentNames.length}) ...`);
 
             // Generate docker image only when DockerfilePath is set
             // If not run just docker run command that will pull the image from Docker Hub
@@ -280,7 +287,7 @@ async function start(config: Config, development: boolean, componentNames: strin
                     let output: string = await execCommandAsync(dockerBuildCommand);
                     console.log(`${output}`);
                 } catch (error) {
-                    printError((error as Error).message);
+                    printError(`Failed to build Docker image for the component: ${component.Name} - ${error}`);
                     process.exit(1);
                 }
             }
@@ -288,17 +295,19 @@ async function start(config: Config, development: boolean, componentNames: strin
             // Run the Docker container
             console.log(`Running Docker container for: ${component.Name} ...`);
             const dockerRunCommand = generateDockerRunCommand(component.Name, component.ContainerConfig);
+            console.log(dockerRunCommand);
+
             try {
                 let output: string = await execCommandAsync(dockerRunCommand);
                 console.log(`${output}`);
             } catch (error) {
-                printError((error as Error).message);
+                printError(`Failed to start Docker container for component: ${component.Name} - ${error}`);
                 process.exit(1);
             }
 
             componentsStarted++;
         }
-    });
+    };
 }
 
 async function stop(config: Config, componentNames: string[]) {

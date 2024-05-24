@@ -18,6 +18,7 @@ using MongoDB.Driver;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualBasic;
 using System.Diagnostics;
+using System.Reflection;
 
 namespace StickyWebBackend
 {
@@ -37,22 +38,39 @@ namespace StickyWebBackend
     public class Backend
     {
         Dictionary<string, Database> databases = new Dictionary<string, Database>();
-        Dictionary<string, Func<OkObjectResult>> customActions = new Dictionary<string, Func<OkObjectResult>>();
+       // Dictionary<string, Func<OkObjectResult, int>> customActions = new Dictionary<string, Func<OkObjectResult>>();
+        Dictionary<string, CustomAction> customActions = new Dictionary<string, CustomAction>();
 
         public void Startup(WebApplicationBuilder builder)
         {
             // Read configuration            
             ConfigurationManager configuration = builder.Configuration;
 
-            // Add custom actions
-            customActions.Add("ExampleCustomAction", CustomActions.ExampleAction);
+            // Load plugin DLL
+            string dllPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugin.dll");
+            Assembly pluginAssembly = Assembly.LoadFrom(dllPath);
+            foreach (Type type in pluginAssembly.GetTypes())
+            {
+                if (typeof(IPlugin).IsAssignableFrom(type))
+                {
+                    IPlugin? pluginInstance = null;
+                    object? pluginInstanceObject = Activator.CreateInstance(type);
+                    if (pluginInstanceObject != null)
+                    {
+                        pluginInstance = (IPlugin)pluginInstanceObject;
+                    }
 
-            // Add services to the container.
-
-            builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
-
+                    // Register custom actions from the plugin
+                    if (pluginInstance != null)
+                    {
+                        Console.WriteLine("Registering custom actions from the plugin");
+                        pluginInstance.RegisterCustomEndpointActions((string key, CustomAction action) => { customActions[key] = action; });
+                    }
+                   
+                    break;
+                }
+            }
+            
             // Swagger
             builder.Services.AddSwaggerGen(c =>
             {
@@ -152,7 +170,6 @@ namespace StickyWebBackend
             app.UsePathBase(dynamicConfiguration.BasePath + "/backend");
 
             InitializeDatabases(dynamicConfiguration);
-           
             InitializeEndpoints(app, dynamicConfiguration);
         }
 
@@ -263,12 +280,7 @@ namespace StickyWebBackend
             }   
         }
 
-        // private void CreateGetEndpoint(WebApplication app, DynamicConfiguration dynamicConfiguration, EndpointDefinition endpointDefinition, string baseEndpointPath) 
-        // {
-        //     app.MapGet(baseEndpointPath + "/{id}", GetHandleRequestFunction(dynamicConfiguration, endpointDefinition));
-        // }
-
-         private void CreateGetEndpoint(WebApplication app, DynamicConfiguration dynamicConfiguration, EndpointDefinition endpointDefinition, string baseEndpointPath) 
+        private void CreateGetEndpoint(WebApplication app, DynamicConfiguration dynamicConfiguration, EndpointDefinition endpointDefinition, string baseEndpointPath) 
         {
             if (endpointDefinition.Subroute != null)
             {
@@ -296,29 +308,48 @@ namespace StickyWebBackend
             {
                 //context.Response.Headers.Add("Content-Type", "application/json");
 
+                // Find endpoint body that this endpoint should use
                 List<EndpointBodyDefinition> endpointBodies;
                 if (!Utils.GetValue(dynamicConfiguration.EndpointBodies, out endpointBodies))
                 {
                     Utils.ErrorExit($"No endpoint bodies detected in the dynamic configuration!");
                 }    
 
-                EndpointBodyDefinition? endpointBodyDefinition = null;
-                if (endpointDefinition.BodyName != null)
+                // Find request body definition
+                EndpointBodyDefinition? endpointRequestBodyDefinition = null;
+                if (endpointDefinition.RequestBodyName != null)
                 {
-                    if (!Utils.GetValue(endpointBodies.Find(o => o.Name == endpointDefinition.BodyName), out endpointBodyDefinition))
+                    if (!Utils.GetValue(endpointBodies.Find(o => o.Name == endpointDefinition.RequestBodyName), out endpointRequestBodyDefinition))
                     {
-                        Utils.ErrorExit($"No endpoint body name detected for endpoint {endpointDefinition.Name} in the dynamic configuration!");
+                        Utils.ErrorExit($"No request endpoint body name detected for endpoint {endpointDefinition.Name} in the dynamic configuration!");
                     }
                 }
-                Console.WriteLine("Called GetHandleRequestFunction");
 
-                // Perform action
+                // Find response body definition
+                EndpointBodyDefinition? endpointResponseBodyDefinition = null;
+                if (endpointDefinition.ResponseBodyName != null)
+                {
+                    if (!Utils.GetValue(endpointBodies.Find(o => o.Name == endpointDefinition.ResponseBodyName), out endpointResponseBodyDefinition))
+                    {
+                        Utils.ErrorExit($"No response endpoint body name detected for endpoint {endpointDefinition.Name} in the dynamic configuration!");
+                    }
+                }
+
+                // Read action definition from the config
+                EndpointActionDefinition endpointActionDefinition;
+                if (!Utils.GetValue(endpointDefinition.Action, out endpointActionDefinition))
+                {
+                    Utils.ErrorExit($"No endpoint action detected for endpoint {endpointDefinition.Name} in the dynamic configuration!");
+                }
+    
+                // Perform default action
                 if (endpointDefinition.Action.Type == EndpointActionType.Default) 
                 {
-                    EndpointDefaultActionDefinition endpointDefaultActionDefinition;
-                    if (!Utils.GetValue(endpointDefinition.Action as EndpointDefaultActionDefinition, out endpointDefaultActionDefinition))
+                    // Read default action definition from the config
+                    EndpointDefaultActionDefinition? endpointDefaultActionDefinition = endpointDefinition.Action as EndpointDefaultActionDefinition;
+                    if (endpointDefaultActionDefinition == null)
                     {
-                        Utils.ErrorExit($"No endpoint action named {endpointDefinition.BodyName} detected for endpoint {endpointDefinition.Name} in the dynamic configuration!");
+                        Utils.ErrorExit($"Wrong setup for default endpoint action detected for endpoint {endpointDefinition.Name} in the dynamic configuration!");
                     }
 
                     switch(endpointDefinition.Method) 
@@ -329,43 +360,54 @@ namespace StickyWebBackend
                             // TODO: not sure if this is the best way to do this
                             if (string.IsNullOrEmpty(id)) 
                             {
-                                return await DefaultActions.GetAsyncAll(endpointDefaultActionDefinition, databases, endpointBodyDefinition);
-                            } else 
+                                return await DefaultActions.GetAsyncAll(endpointDefaultActionDefinition, databases, endpointRequestBodyDefinition, endpointResponseBodyDefinition);
+                            } 
+                            else 
                             {   
-                                return await DefaultActions.GetAsync(endpointDefaultActionDefinition, databases, endpointBodyDefinition, id);
+                                return await DefaultActions.GetAsync(endpointDefaultActionDefinition, databases, endpointRequestBodyDefinition, endpointResponseBodyDefinition, id);
                             }
                         }
                         case "POST":
                         {
                             StreamReader reader = new StreamReader(context.Request.Body, Encoding.UTF8);
                             string requestBody = await reader.ReadToEndAsync();
-                            return await DefaultActions.PostAsync(endpointDefaultActionDefinition, databases, endpointBodyDefinition, requestBody);
+                            return await DefaultActions.PostAsync(endpointDefaultActionDefinition, databases, endpointRequestBodyDefinition, endpointResponseBodyDefinition, requestBody);
                         }
                         case "DELETE":
                         {
                             string? id = context.Request.RouteValues["id"] as string;
-                            return await DefaultActions.DeleteAsync(endpointDefaultActionDefinition, databases, endpointBodyDefinition, id);
+                            return await DefaultActions.DeleteAsync(endpointDefaultActionDefinition, databases, endpointRequestBodyDefinition, endpointResponseBodyDefinition, id);
                         }
                         default:
+                        {
                             Utils.ErrorExit($"Unknown endpoint method {endpointDefinition.Method} for endpoint {endpointDefinition.Name}");
                             throw new UnreachableException();
+                        }
                     }
+                
+                    throw new UnreachableException();
                 }
                 else if (endpointDefinition.Action.Type == EndpointActionType.Custom)
                 {
-                    EndpointCustomActionDefinition endpointCustomActionDefinition;
-                    if (!Utils.GetValue(endpointDefinition.Action as EndpointCustomActionDefinition, out endpointCustomActionDefinition))
+                    // Read custom action definition from the config
+                    EndpointCustomActionDefinition? endpointCustomActionDefinition = endpointDefinition.Action as EndpointCustomActionDefinition;
+                    if (endpointCustomActionDefinition != null)
                     {
-                        Utils.ErrorExit($"No endpoint action named {endpointDefinition.BodyName} detected for endpoint {endpointDefinition.Name} in the dynamic configuration!");
+                        // Get custom action registered in the plugin DLL
+                        if (customActions.TryGetValue(endpointCustomActionDefinition.Name, out var customAction))
+                        {
+                            return await customAction(databases, endpointRequestBodyDefinition, endpointResponseBodyDefinition);
+                        }
                     }
-
-                    return customActions[endpointCustomActionDefinition.Name]();
+                    else
+                    {
+                        Utils.ErrorExit($"Wrong setup for custom endpoint action detected for endpoint {endpointDefinition.Name} in the dynamic configuration!");
+                        throw new UnreachableException();
+                    }
                 }
-                else
-                {
-                    Utils.ErrorExit($"Unknown endpoint action type: {endpointDefinition.Action.Type}");
-                    throw new UnreachableException();
-                }
+               
+                Utils.ErrorExit($"Unknown endpoint action type: {endpointDefinition.Action.Type}");
+                throw new UnreachableException();
             };
 
             return handleRequest;

@@ -66,15 +66,13 @@ Install prerequisites: `npm install yargs mongodb`
 
 Actions:
 
-- `node .\StickyWebPlatformManager.js --help` - Displays help.
-- `node .\StickyWebPlatformManager.js --action InitializeDatabase` - Connects to database container using `DatabaseConnectionString` defined in configuration file. Creates all databases and collections defined in configuration file. Fills the collections with initial data from the file specified in `InitialData` field of collection defined in configuration file.
-- `node .\StickyWebPlatformManager.js --action ClearDatabase` - Deletes all databases except `local`, `admin` and `config`.
-- `node .\StickyWebPlatformManager.js --action Start` - Starts all `database`, `frontend`, `backend`, `nginx` services defined in docker-compose file in the production mode.
-- `node .\StickyWebPlatformManager.js --action StartDev` - Starts all `database`, `frontend`, `backend`, `nginx` services defined in docker-compose file in the development mode.
-
+- `ts-node .\swp-manager.ts --help` - Displays help.
+- `ts-node .\swp-manager.ts --action InitializeDatabase` - Connects to database container using `DatabaseConnectionString` defined in configuration file. Creates all databases and collections defined in configuration file. Fills the collections with initial data from the file specified in `InitialData` field of collection defined in configuration file.
+- `ts-node .\swp-manager.ts --action ClearDatabase` - Deletes all databases except `local`, `admin` and `config`.
+- `ts-node .\swp-manager.ts --action Start` - Starts all `database`, `frontend`, `backend`, `nginx` services defined in docker-compose file in the production mode.
+- `ts-node .\swp-manager.ts --action StartDev` - Starts all `database`, `frontend`, `backend`, `nginx` services defined in docker-compose file in the development mode.
+- `ts-node .\swp-manager.ts --action Start --components backend` - Start specific component
 To run all containers manually:
-
-- `docker compose -f "<PROJECT_DIRECTORY>/docker-compose.yaml" up database backend frontend nginx -d --build`
 
 ### Backend
 

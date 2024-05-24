@@ -5,7 +5,6 @@ using System.Text.Json.Serialization;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
-
 namespace StickyWebBackend
 {
     public class Database 
@@ -121,7 +120,8 @@ namespace StickyWebBackend
         public required string Method { get; set; }
         public string? Subroute { get; set; }
 
-        public string? BodyName { get; set; }
+        public string? RequestBodyName { get; set; }
+        public string? ResponseBodyName { get; set; }
 
         [JsonConverter(typeof(EndpointActionDefinitionConverter))]
         public required EndpointActionDefinition Action { get; set; }

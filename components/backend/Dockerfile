@@ -17,19 +17,14 @@ WORKDIR /src
 
 # Copy project file to /src/backend
 COPY ["Sticky-Web-Backend.csproj", "/src"]
-
-# Restore dependencies and tools of a project
-RUN dotnet restore "Sticky-Web-Backend.csproj"
-
-# Copy all files from current local directory to /src directory in container
-COPY . .
+COPY ["/core", "/src/core"]
+COPY ["/main", "/src/main"]
+COPY ["/plugin", "/src/plugin"]
 
 # Build the files
-RUN dotnet build "Sticky-Web-Backend.csproj" -c Release -o /app/build
-
-# Publish the application and its dependencies to /app/publish directory
-#FROM build
-RUN dotnet publish "Sticky-Web-Backend.csproj" -c Release -o /app/publish
+RUN dotnet publish /src/core/Core.csproj -c Release -o /app/publish
+RUN dotnet publish /src/main/Main.csproj -c Release -o /app/publish
+RUN dotnet publish /src/plugin/Plugin.csproj -c Release -o /app/publish
 
 # Change current directory in final container
 FROM final
@@ -37,10 +32,4 @@ WORKDIR /app
 
 # Copy published files to final image
 COPY --from=build /app/publish .
-ENTRYPOINT ["dotnet", "Sticky-Web-Backend.dll"]
-
-# Copy and run sequence:
-#    ./Backend/Sticky-Web-Backend.csproj -> [build]/src/Backend/Sticky-Web-Backend.csproj
-#    ./Backend -> [build]/src/Backend
-#    [build]/app/build
-#    [build]/app/publish -> [final]/app
+ENTRYPOINT ["./Main.exe"]

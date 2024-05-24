@@ -13,7 +13,8 @@ namespace StickyWebBackend
         public static async Task<OkObjectResult> GetAsync(
             EndpointDefaultActionDefinition actionDefinition, 
             Dictionary<string, Database> databases, 
-            EndpointBodyDefinition? endpointBodyDefinition,
+            EndpointBodyDefinition? endpointRequestBodyDefinition,
+            EndpointBodyDefinition? endpointResponseBodyDefinition,
             string id
         ) {
             // Find required database and collection
@@ -26,8 +27,9 @@ namespace StickyWebBackend
 
             // Convert result to endpoint body
             Func<BsonDocument?> dataConversion = () => { 
-                return endpointBodyDefinition == null ? fetchResult.Data : fetchResult.Data.MapToEndpointBody(endpointBodyDefinition);
+                return endpointResponseBodyDefinition == null ? fetchResult.Data : fetchResult.Data.MapToEndpointBody(endpointResponseBodyDefinition);
             };
+
             EndpointAnswer<string?> endpointAnswer = fetchResult.ConvertToEndpointAnswer(dataConversion);
 
             // Return
@@ -61,9 +63,13 @@ namespace StickyWebBackend
         public static async Task<OkObjectResult> PostAsync(
             EndpointDefaultActionDefinition actionDefinition, 
             Dictionary<string, Database> databases, 
-            EndpointBodyDefinition? endpointBodyDefinition,
+            EndpointBodyDefinition? endpointRequestBodyDefinition,
+            EndpointBodyDefinition? endpointResponseBodyDefinition,
             string requestBody
         ) {
+            // Validate incoming request body against request body definition
+
+
             // Find required database and collection
             Database database = databases[actionDefinition.DatabaseName];
             IMongoCollection<BsonDocument> collection = database.Collections[actionDefinition.DatabaseCollectionName]; 
